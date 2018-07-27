@@ -52,13 +52,13 @@ public class OrderManager {
 
 		// Opens a socket connection and constantly updates the current price while
 		// kicking off a price fetch event.
-		AccountManager.getSocketClient().onSingleMarketTickerEvent(symbol, response -> {
-			curPrice = response.getBestBidPrice();
-			if (useMaxTrailPrice) { 
-				sellTrailPrice = Math.max(curPrice, sellTrailPrice);
-			}
-			onPriceFetchEvent();
-		});
+//		AccountManager.getSocketClient().onSingleMarketTickerEvent(symbol, response -> {
+//			curPrice = response.getBestBidPrice();
+//			if (useMaxTrailPrice) { 
+//				sellTrailPrice = Math.max(curPrice, sellTrailPrice);
+//			}
+//			onPriceFetchEvent();
+//		});
 	}
 
 	public void placeMarketSell() {

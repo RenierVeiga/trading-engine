@@ -1,4 +1,4 @@
-import AccountInfo.AccountManager;
+import AccountInfo.AccountManager; 
 
 public class MainClass {
 
@@ -19,7 +19,7 @@ public class MainClass {
 //		createThread("NULS", "BTC", 1);
 //		createThread("IOST", "BTC", 1);
 		
-		AccountManager acm = new AccountManager();
+		AccountManager acm = new AccountManager(); 
 		System.out.println(AccountManager.getRestClient().getExchangeInfo().getSymbols().toString());
 		System.out.println(acm.getAccountBalanceCache().toString());
 	}

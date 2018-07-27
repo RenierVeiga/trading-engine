@@ -6,11 +6,10 @@ import java.util.TreeMap;
 import com.binance.api.client.BinanceApiAsyncRestClient;
 import com.binance.api.client.BinanceApiClientFactory;
 import com.binance.api.client.BinanceApiRestClient;
+import com.binance.api.client.BinanceApiWebSocketClient;
 import com.binance.api.client.domain.account.Account;
 import com.binance.api.client.domain.account.AssetBalance;
 import com.binance.api.client.domain.event.UserDataUpdateEvent.UserDataUpdateEventType;
-import com.binance.api.client.impl.BinanceApiWebSocketClientImpl;
-
 import properties.Properties;
 
 public class AccountManager {
@@ -21,9 +20,9 @@ public class AccountManager {
 	
 	private static final BinanceApiAsyncRestClient restAsynClient = factory.newAsyncRestClient();
 	private static final BinanceApiRestClient restClient = factory.newRestClient();
-	private static final BinanceApiWebSocketClientImpl socketClient = factory.newWebSocketClient();
+	private static final BinanceApiWebSocketClient socketClient = factory.newWebSocketClient();
 	
-	// Account Information
+	// Account Information 
 	private Map<String, AssetBalance> accountBalanceCache;
 
 	// Listen key used to interact with the user data streaming API.
