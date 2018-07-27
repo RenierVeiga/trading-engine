@@ -18,10 +18,6 @@ public class Properties {
 	Properties() {
 //		try {
 			
-			// key = value from txt file.
-			key = "ziwNMBFk9MBKBZhJeztNagGR9mN671D2j6a6y4WriQzfJRM0RR7e5uSadef3uBMd";
-			// secret = value from txt file.
-			secret = "9A0Jq2ClbFvvY8LFRty1aM1Rv0T1nYD5RfmoxnOCLSpmvdbbEx39eJZnLuVh3rJf";
 			
 //			// Read properties txt file and set variables here.
 //			input = FileInputStream("config.properties");
