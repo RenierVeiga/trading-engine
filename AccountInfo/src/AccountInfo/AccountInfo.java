@@ -1,6 +1,7 @@
 package AccountInfo;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import com.binance.api.client.BinanceApiAsyncRestClient;
@@ -12,7 +13,7 @@ import com.binance.api.client.domain.account.AssetBalance;
 import com.binance.api.client.domain.event.UserDataUpdateEvent.UserDataUpdateEventType;
 import properties.Properties;
 
-public class AccountManager {
+public class AccountInfo {
 
 	// API initialization
 	private static final BinanceApiClientFactory factory = BinanceApiClientFactory
@@ -28,7 +29,7 @@ public class AccountManager {
 	// Listen key used to interact with the user data streaming API.
 	private final String listenKey;
 
-	public AccountManager() {
+	public AccountInfo() {
 		this.listenKey = initializeAssetBalanceCacheAndStreamSession();
 		startAccountBalanceEventStreaming(listenKey);
 	}
@@ -89,9 +90,12 @@ public class AccountManager {
 				for (AssetBalance assetBalance : response.getAccountUpdateEvent().getBalances()) {
 					accountBalanceCache.put(assetBalance.getAsset(), assetBalance);
 				}
-				System.out.println(accountBalanceCache);
 			}
 		});
+	}
+	
+	public Set<String> getAssets(){
+		return accountBalanceCache.keySet();
 	}
 	
 	// TODO - Add information about amount to trade for each asset.

@@ -1,20 +1,25 @@
 import com.binance.api.client.domain.market.CandlestickInterval;
 
-import AccountInfo.AccountManager;
+import AccountInfo.AccountInfo;
 import Utils.Enums.TrendDirection;
 
 public class BtcUsdSignals {
-	private final String SYMBOL = "BTCUSDT";
-	private TASignals signals;
+	private static final String SYMBOL = "BTCUSDT";
+	private static TASignals signals;
 	private final CandlestickInterval interval = CandlestickInterval.HOURLY;
 	
 	public BtcUsdSignals() {
 		super();
-		this.signals = new TASignals(SYMBOL, interval);
+		BtcUsdSignals.signals = new TASignals(SYMBOL, interval);
 	}
 	
-	public TrendDirection getTrend() {
-		Double curPrice = Double.parseDouble(AccountManager.getRestClient().getPrice(SYMBOL).getPrice());
+	public static TrendDirection getTrend() {
+		Double curPrice = Double.parseDouble(AccountInfo.getRestClient().getPrice(SYMBOL).getPrice());
 		return signals.getTrendDiretion(curPrice);
+	}
+	
+	public static boolean isLiquidateToBtc() {
+		TrendDirection trend = getTrend();
+		return (trend.equals(TrendDirection.BREAKUP) || trend.equals(TrendDirection.HIGHERMIN));
 	}
 }

@@ -10,7 +10,7 @@ import com.binance.api.client.domain.account.Account;
 import com.binance.api.client.domain.account.NewOrder;
 import com.binance.api.client.domain.market.CandlestickInterval;
 
-import AccountInfo.AccountManager;
+import AccountInfo.AccountInfo;
 import Enums.State;
 import reports.Report;
 
@@ -64,7 +64,7 @@ public class OrderManager {
 		useMaxTrailPrice = false;
 		sellTrailPrice = 0;
 
-		AccountManager.getRestAsyncClient().getAccount((Account response) -> {
+		AccountInfo.getRestAsyncClient().getAccount((Account response) -> {
 			String quantity = String.valueOf(response.getAssetBalance(assetA).getFree());
 			NewOrder order = new NewOrder(symbol, OrderSide.SELL, OrderType.MARKET, TimeInForce.GTC, quantity);
 			// client.newOrder(order, response -> System.out.println(response));
@@ -76,7 +76,7 @@ public class OrderManager {
 
 	public void placeMarketBuy() {
 		useMaxTrailPrice = true;
-		AccountManager.getRestAsyncClient().getAccount((Account response) -> {
+		AccountInfo.getRestAsyncClient().getAccount((Account response) -> {
 			String quantity = String.valueOf(Double.parseDouble(response.getAssetBalance(assetB).getFree()) / curPrice);
 			NewOrder order = new NewOrder(symbol, OrderSide.BUY, OrderType.MARKET, TimeInForce.GTC, quantity);
 			// client.newOrder(order, response -> System.out.println(response));
