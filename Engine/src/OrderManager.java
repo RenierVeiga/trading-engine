@@ -10,8 +10,8 @@ import com.binance.api.client.domain.account.Account;
 import com.binance.api.client.domain.account.NewOrder;
 import com.binance.api.client.domain.market.CandlestickInterval;
 
-import AccountInfo.AccountInfo;
 import Enums.State;
+import accountInfo.AccountInfo;
 import reports.Report;
 
 /**

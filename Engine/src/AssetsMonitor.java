@@ -1,7 +1,7 @@
 
 import java.util.Set;
 
-import AccountInfo.AccountInfo;
+import accountInfo.AccountInfo;
 
 /**
  * @author Renier Veiga

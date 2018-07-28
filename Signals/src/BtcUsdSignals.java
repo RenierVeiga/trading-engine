@@ -1,7 +1,7 @@
 import com.binance.api.client.domain.market.CandlestickInterval;
 
-import AccountInfo.AccountInfo;
 import Utils.Enums.TrendDirection;
+import accountInfo.AccountInfo;
 
 public class BtcUsdSignals {
 	private static final String SYMBOL = "BTCUSDT";

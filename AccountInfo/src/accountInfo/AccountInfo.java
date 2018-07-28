@@ -1,4 +1,4 @@
-package AccountInfo;
+package accountInfo;
 
 import java.util.Map;
 import java.util.Set;
