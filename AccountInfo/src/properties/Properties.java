@@ -1,47 +1,40 @@
 package properties;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 public class Properties {
-	String key, secret;
+	static String key;
 
+	static String secret;
+	
 	/*
 	 * This value indicates if we are running on auto stop sell mode, or fully
 	 * automated mode. sellOnlyMode = true means we are not ready to run fully
 	 * automated.
 	 */
-	boolean sellOnlyMode = true;
+	static boolean sellOnlyMode = true;
 	private static final Properties instance = new Properties();
-	InputStream input = null;
+	private static java.util.Properties p = new java.util.Properties();
 
-	Properties() {
-//		try {
-			
-			
-//			// Read properties txt file and set variables here.
-//			input = FileInputStream("config.properties");
-//			instance.load(input);
-//			// key = value from txt file.
-//			key = instance.getProperty("key");
-//			// secret = value from txt file.
-//			secret = instance.getProperty("secret");
-//			// sellOnlyMode = value from txt file.
-//			sellOnlyMode = Boolean.parseBoolean(instance.getProperty("sellOnlyMode"));
-//		} catch (IOException ex) {
-//			ex.printStackTrace();
-//		} finally {
-//			if (input != null) {
-//				try {
-//					input.close();
-//				} catch (IOException e) {
-//					e.printStackTrace();
-//				}
-//			}
-//		}
-	}
+	private Properties() {}
 
 	public static Properties getInstance() {
+		try (InputStream inputStream = new FileInputStream("C:\\Users\\renie\\git\\trading-engine\\AccountInfo\\src\\properties\\config.properties")) {
+			p.load(inputStream);
+			// key = value from txt file.
+			key  = p.getProperty("key");
+			// secret = value from txt file.
+			secret = p.getProperty("secret");
+			// sellOnlyMode = value from txt file.
+			if (p.getProperty("sellOnlyMode").equals("false")) {
+				sellOnlyMode = false;
+			} else {
+				sellOnlyMode = true;
+			}
+			inputStream.close();
+		} catch(IOException ex){
+			ex.printStackTrace();
+		}
 		return instance;
 	}
 
@@ -49,16 +42,11 @@ public class Properties {
 		return key;
 	}
 
-	public void setKey(String key) {
-		this.key = key;
-	}
-
 	public String getSecret() {
 		return secret;
 	}
 
-	public void setSecret(String secret) {
-		this.secret = secret;
+	public boolean getMode() {
+		return sellOnlyMode;
 	}
-
 }

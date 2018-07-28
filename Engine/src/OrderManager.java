@@ -12,8 +12,7 @@ import com.binance.api.client.domain.market.CandlestickInterval;
 
 import AccountInfo.AccountManager;
 import Enums.State;
-import Reports.Report;
-import Utils.Enums.TrendDirection;
+import reports.Report;
 
 /**
  * @author Renier Veiga

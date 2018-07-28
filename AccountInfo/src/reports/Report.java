@@ -1,10 +1,11 @@
-package Reports;
+package reports;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 
 public class Report {
-	private static final String FILENAME = "C:\\Users\\renie\\Desktop\\report.txt";
+	private static final String FILENAME = "C:\\Users\\Ed Donahue\\Desktop\\report.txt";
 
 	public static void createReport(String content) {
 		BufferedWriter bw = null;
