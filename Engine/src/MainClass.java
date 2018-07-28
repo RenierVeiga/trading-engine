@@ -1,4 +1,4 @@
-import accountInfo.AccountInfo; 
+import AccountInfo.AccountInfo; 
 
 public class MainClass {
 

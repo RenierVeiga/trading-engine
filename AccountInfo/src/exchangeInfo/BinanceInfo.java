@@ -5,7 +5,7 @@ import java.util.TreeSet;
 
 import com.binance.api.client.domain.general.SymbolInfo;
 
-import accountInfo.AccountInfo;
+import AccountInfo.AccountInfo;
 
 public class BinanceInfo {
 

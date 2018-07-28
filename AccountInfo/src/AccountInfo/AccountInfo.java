@@ -1,4 +1,4 @@
-package accountInfo;
+package AccountInfo;
 
 import java.util.Map;
 import java.util.Set;
@@ -11,6 +11,7 @@ import com.binance.api.client.BinanceApiWebSocketClient;
 import com.binance.api.client.domain.account.Account;
 import com.binance.api.client.domain.account.AssetBalance;
 import com.binance.api.client.domain.event.UserDataUpdateEvent.UserDataUpdateEventType;
+
 import properties.Properties;
 
 public class AccountInfo {
@@ -18,12 +19,12 @@ public class AccountInfo {
 	// API initialization
 	private static final BinanceApiClientFactory factory = BinanceApiClientFactory
 			.newInstance(Properties.getInstance().getKey(), Properties.getInstance().getSecret());
-	
+
 	private static final BinanceApiAsyncRestClient restAsynClient = factory.newAsyncRestClient();
 	private static final BinanceApiRestClient restClient = factory.newRestClient();
 	private static final BinanceApiWebSocketClient socketClient = factory.newWebSocketClient();
-	
-	// Account Information 
+
+	// Account Information
 	private Map<String, AssetBalance> accountBalanceCache;
 
 	// Listen key used to interact with the user data streaming API.
@@ -33,7 +34,7 @@ public class AccountInfo {
 		this.listenKey = initializeAssetBalanceCacheAndStreamSession();
 		startAccountBalanceEventStreaming(listenKey);
 	}
-	
+
 	public static BinanceApiRestClient getRestClient() {
 		return restClient;
 	}
@@ -67,8 +68,8 @@ public class AccountInfo {
 
 		this.accountBalanceCache = new TreeMap<>();
 		for (AssetBalance assetBalance : account.getBalances()) {
-			if(Float.parseFloat(assetBalance.getFree())>0) {
-			accountBalanceCache.put(assetBalance.getAsset(), assetBalance);
+			if (Float.parseFloat(assetBalance.getFree()) > 0) {
+				accountBalanceCache.put(assetBalance.getAsset(), assetBalance);
 			}
 		}
 
@@ -93,10 +94,10 @@ public class AccountInfo {
 			}
 		});
 	}
-	
-	public Set<String> getAssets(){
+
+	public Set<String> getAssets() {
 		return accountBalanceCache.keySet();
 	}
-	
+
 	// TODO - Add information about amount to trade for each asset.
 }
