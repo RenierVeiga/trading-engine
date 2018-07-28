@@ -1,5 +1,5 @@
 
-import java.util.Set;
+import java.util.HashMap;
 
 import AccountInfo.AccountInfo;
 
@@ -16,21 +16,19 @@ import AccountInfo.AccountInfo;
 public class AssetsMonitor {
 
 	AccountInfo acm = new AccountInfo();
-	Set<String> assets = acm.getAssets();
+	HashMap<String, AssetWatcher> assetMap = new HashMap<String, AssetWatcher>();
 
 	public AssetsMonitor() {
-		for (String asset : assets) {
-			createThread(asset);
+
+	}
+
+	public void startWatchforAssets() {
+
+		for (String asset : acm.getAssets()) {
+			if (!assetMap.containsKey(asset)) {
+				assetMap.put(asset, new AssetWatcher(asset));
+			}
 		}
 	}
 
-	private static void createThread(String asset) {
-		final Thread one = new Thread() {
-			@Override
-			public void run() {
-				new AssetWatcher(asset);
-			}
-		};
-		one.start();
-	}
 }

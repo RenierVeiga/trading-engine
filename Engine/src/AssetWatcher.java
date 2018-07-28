@@ -1,5 +1,4 @@
 import java.util.Set;
-import java.util.TreeSet;
 
 import exchangeInfo.BinanceInfo;
 
@@ -14,7 +13,7 @@ import exchangeInfo.BinanceInfo;
  *         otherwise we will liquidate to BTC and then to USDT.
  */
 
-public class AssetWatcher {
+public class AssetWatcher implements Runnable {
 	private String asset;
 	private Set<String> symbols = BinanceInfo.getSymbols();
 	private boolean hasBtcPair = false;
@@ -32,21 +31,18 @@ public class AssetWatcher {
 		}
 	}
 
-	private Set<String> getTradingPairs() {
-		Set<String> tradingPairs = new TreeSet<String>();
+	@Override
+	public void run() {
 
-		return tradingPairs;
-	}
-
-	private void startWatch() throws Exception {
 		if (hasBtcPair && (BtcUsdSignals.isLiquidateToBtc() || !hasUsdtPair)) {
 			// Start watch for BTC pair
+			new AssetManager(asset, "BTC");
 		} else if (hasUsdtPair) {
 			// Start watch for USDT pair
+			new AssetManager(asset, "USDT");
 		} else {
-			throw new Exception("Invalid watch state.");
+			// throw new Exception("Invalid watch state.");
 		}
-		// TASignals signals = new TASignals(symbol, interval);
 	}
 
 }

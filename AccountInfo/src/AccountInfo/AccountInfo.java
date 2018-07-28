@@ -22,7 +22,6 @@ public class AccountInfo {
 
 	private static final BinanceApiAsyncRestClient restAsynClient = factory.newAsyncRestClient();
 	private static final BinanceApiRestClient restClient = factory.newRestClient();
-	private static final BinanceApiWebSocketClient socketClient = factory.newWebSocketClient();
 
 	// Account Information
 	private Map<String, AssetBalance> accountBalanceCache;
@@ -43,8 +42,8 @@ public class AccountInfo {
 		return restAsynClient;
 	}
 
-	public static BinanceApiWebSocketClient getSocketClient() {
-		return socketClient;
+	public static synchronized BinanceApiWebSocketClient getSocketClient() {
+		return factory.newWebSocketClient();
 	}
 
 	// Add information about account balances for each asset.
@@ -85,7 +84,7 @@ public class AccountInfo {
 	 */
 	private void startAccountBalanceEventStreaming(String listenKey) {
 
-		socketClient.onUserDataUpdateEvent(listenKey, response -> {
+		getSocketClient().onUserDataUpdateEvent(listenKey, response -> {
 			if (response.getEventType() == UserDataUpdateEventType.ACCOUNT_UPDATE) {
 				// Override cached asset balances
 				for (AssetBalance assetBalance : response.getAccountUpdateEvent().getBalances()) {

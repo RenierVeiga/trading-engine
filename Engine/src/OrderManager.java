@@ -2,13 +2,13 @@
 import java.util.Date;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import com.binance.api.client.constant.BinanceApiConstants;
 import com.binance.api.client.domain.OrderSide;
 import com.binance.api.client.domain.OrderType;
 import com.binance.api.client.domain.TimeInForce;
 import com.binance.api.client.domain.account.Account;
 import com.binance.api.client.domain.account.NewOrder;
-import com.binance.api.client.domain.market.CandlestickInterval;
 
 import AccountInfo.AccountInfo;
 import Enums.State;
@@ -34,7 +34,6 @@ import reports.Report;
 public class OrderManager {
 	private String symbol, assetA, assetB;
 	private TASignals signals;
-	private final CandlestickInterval interval = CandlestickInterval.HOURLY;
 	private State state = State.WATCHING;
 	// private double quantityP = 1;
 	private final double tPercent = 1.05; // Trailing Percentage
@@ -47,17 +46,18 @@ public class OrderManager {
 		this.assetB = assetB.toUpperCase();
 		symbol = String.format("%s%s", assetA, assetB).toLowerCase();
 		// Init symbol and interval
-		signals = new TASignals(symbol, interval);
+		signals = new TASignals(symbol);
 
 		// Opens a socket connection and constantly updates the current price while
 		// kicking off a price fetch event.
-//		AccountManager.getSocketClient().onSingleMarketTickerEvent(symbol, response -> {
-//			curPrice = response.getBestBidPrice();
-//			if (useMaxTrailPrice) { 
-//				sellTrailPrice = Math.max(curPrice, sellTrailPrice);
-//			}
-//			onPriceFetchEvent();
-//		});
+		// AccountManager.getSocketClient().onSingleMarketTickerEvent(symbol, response
+		// -> {
+		// curPrice = response.getBestBidPrice();
+		// if (useMaxTrailPrice) {
+		// sellTrailPrice = Math.max(curPrice, sellTrailPrice);
+		// }
+		// onPriceFetchEvent();
+		// });
 	}
 
 	public void placeMarketSell() {
@@ -109,11 +109,11 @@ public class OrderManager {
 		if (!state.equals(State.ENTERED)) {
 			checkTrailingStopBuy();
 		}
-		
+
 		if (!state.equals(State.EXITED)) {
 			checkTrailingStopSell();
 		}
-		
+
 		System.out.println(this.toString());
 	}
 
