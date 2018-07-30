@@ -3,9 +3,9 @@ package properties;
 import java.io.*;
 
 public class Properties {
-	static String key;
+	private static String key;
 
-	static String secret;
+	private static String secret;
 	
 	/*
 	 * This value indicates if we are running on auto stop sell mode, or fully
