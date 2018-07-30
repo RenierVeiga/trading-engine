@@ -12,7 +12,7 @@ public class Properties {
 	 * automated mode. sellOnlyMode = true means we are not ready to run fully
 	 * automated.
 	 */
-	static boolean sellOnlyMode = true;
+	private static boolean sellOnlyMode = true;
 	private static final Properties instance = new Properties();
 	private static java.util.Properties p = new java.util.Properties();
 
