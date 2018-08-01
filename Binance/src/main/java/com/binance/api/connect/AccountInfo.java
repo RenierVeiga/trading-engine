@@ -1,4 +1,4 @@
-package AccountInfo;
+package com.binance.api.connect;
 
 import com.binance.api.client.BinanceApiAsyncRestClient;
 import com.binance.api.client.BinanceApiClientFactory;

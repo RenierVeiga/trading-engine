@@ -1,4 +1,4 @@
-import AccountInfo.AccountInfo;
+import subjects.AccountBalanceStreamSubject;
 
 public class MainClass {
 
@@ -20,9 +20,12 @@ public class MainClass {
 		// createThread("NULS", "BTC", 1);
 		// createThread("IOST", "BTC", 1);
 
-		AccountInfo acm = new AccountInfo();
-		System.out.println(AccountInfo.getRestClient().getExchangeInfo().getSymbols().toString());
-		System.out.println(acm.getAccountBalanceCache().toString());
+		// AccountInfo acm = new AccountInfo();
+		// System.out.println(AccountInfo.getRestClient().getExchangeInfo().getSymbols().toString());
+		// System.out.println(acm.getAccountBalanceCache().toString());
+		// new AssetsMonitor();
+		AccountBalanceStreamSubject.getInstance().start();
+		;
 	}
 
 }

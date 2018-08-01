@@ -9,14 +9,13 @@ import com.binance.api.client.BinanceApiRestClient;
 import com.binance.api.client.BinanceApiWebSocketClient;
 import com.binance.api.client.domain.market.Candlestick;
 import com.binance.api.client.domain.market.CandlestickInterval;
-
-import AccountInfo.AccountInfo;
+import com.binance.api.connect.AccountInfo;
 
 /**
  * Illustrates how to use the klines/candlesticks event stream to create a local
  * cache of bids/asks for a symbol.
  */
-public class CandlesticksCache {
+public abstract class CandleSticksCache {
 
 	BinanceApiWebSocketClient client = AccountInfo.getSocketClient();
 
@@ -26,7 +25,7 @@ public class CandlesticksCache {
 	 */
 	private Map<Long, Candlestick> candlesticksCache;
 
-	public CandlesticksCache(String symbol, CandlestickInterval interval) {
+	public CandleSticksCache(String symbol, CandlestickInterval interval) {
 		initializeCandlestickCache(symbol, interval);
 		startCandlestickEventStreaming(symbol, interval);
 	}
@@ -72,8 +71,11 @@ public class CandlesticksCache {
 
 			// Store the updated candlestick in the cache
 			candlesticksCache.put(openTime, updateCandlestick);
+			onCandleStickEvent();
 		});
 	}
+
+	public abstract void onCandleStickEvent();
 
 	/**
 	 * @return a klines/candlestick cache, containing the open/start time of the

@@ -1,3 +1,5 @@
+package Entities;
+
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -5,10 +7,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import com.binance.api.client.constant.BinanceApiConstants;
 import com.binance.api.client.domain.market.Candlestick;
-import com.binance.api.client.domain.market.CandlestickInterval;
-import com.binance.api.examples.CandlesticksCache;
 
-import Entities.ShortCandle;
 import Utils.Enums.TrendDirection;
 
 /**
@@ -17,44 +16,21 @@ import Utils.Enums.TrendDirection;
  *         Date: Mar 18, 2018
  */
 public class TASignals {
-	String symbol;
-	final CandlestickInterval INTERVAL = CandlestickInterval.HOURLY;
-	CandleSticksCacheImpl candleSticksCache;
-	Map<Long, Candlestick> candleStickMap;
-	ArrayList<Candlestick> candleStickList = new ArrayList<Candlestick>();
-	ArrayList<ShortCandle> candleStickMaxList = new ArrayList<ShortCandle>();
-	ArrayList<ShortCandle> candleStickMinList = new ArrayList<ShortCandle>();
-	int nCandlesToCompare = 20;
 
-	public TASignals(String symbol) {
-		this.symbol = symbol;
-		candleSticksCache = new CandleSticksCacheImpl(this.symbol, INTERVAL);
-		candleStickMap = candleSticksCache.getCandlesticksCache();
+	private ArrayList<Candlestick> candleStickList = new ArrayList<Candlestick>();
+	private ArrayList<ShortCandle> candleStickMaxList = new ArrayList<ShortCandle>();
+	private ArrayList<ShortCandle> candleStickMinList = new ArrayList<ShortCandle>();
+	private final int nCandlesToCompare = 20;
+	// TODO - Add flag to indicate that updateCandles was called.
+
+	public TASignals(Map<Long, Candlestick> candleStickMap) {
 		candleStickList = new ArrayList<Candlestick>(candleStickMap.values());
 		loadSupResPoints();
 	}
 
-	public class CandleSticksCacheImpl extends CandlesticksCache {
-
-		public CandleSticksCacheImpl(String symbol, CandlestickInterval interval) {
-			super(symbol, interval);
-		}
-
-		public void onCandleStickInitialize() {
-			init();
-		}
-
-		public void onCandleStickUpdate() {
-			update();
-		}
-
-	}
-
-	private void init() {
-
-	}
-
-	private void updateLists() {
+	// Update min and max Lists with the last candlestick info.
+	public void updateCandles(Map<Long, Candlestick> candleStickMap) {
+		candleStickList = new ArrayList<Candlestick>(candleStickMap.values());
 		loadSupResPoints();
 	}
 
@@ -64,13 +40,13 @@ public class TASignals {
 		candleStickMaxList = new ArrayList<ShortCandle>();
 		candleStickMinList = new ArrayList<ShortCandle>();
 		// Iterates over all candles
-		int indexOfLastItem = candleStickList.size() - 2;
+		int indexOfLastItem = Math.max(candleStickList.size() - 2, 0);
 		for (int i = indexOfLastItem; i > (indexOfLastItem - 4 * nCandlesToCompare);) {
 			ShortCandle pMin = null;
 			ShortCandle pMax = null;
 			// Iterates over the x candles at the time
 
-			for (int c = i; c > i - nCandlesToCompare; c--) {
+			for (int c = i; c > Math.max(i - nCandlesToCompare, 0); c--) {
 				ShortCandle previous = new ShortCandle(candleStickList.get(c - 1));
 				ShortCandle current = new ShortCandle(candleStickList.get(c));
 				ShortCandle next = new ShortCandle(candleStickList.get(c + 1));
@@ -107,13 +83,6 @@ public class TASignals {
 				}
 			}
 		}
-	}
-
-	// Update min and max Lists with the last candlestick info.
-	private void update() {
-		candleStickMap = candleSticksCache.getCandlesticksCache();
-		candleStickList = new ArrayList<Candlestick>(candleStickMap.values());
-		updateLists();
 	}
 
 	public TrendDirection getTrendDiretion(double curPrice) {
@@ -193,10 +162,6 @@ public class TASignals {
 			str.append("Val" + i, candleStickMaxList.get(i).getHigh());
 		}
 		return str.toString();
-	}
-
-	public void disconnect() {
-		candleSticksCache.disconnect();
 	}
 
 	public String toString() {

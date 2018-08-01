@@ -1,17 +1,22 @@
+package observers;
 
 import java.util.Date;
+import java.util.Map;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import com.binance.api.client.BinanceApiWebSocketClient;
 import com.binance.api.client.constant.BinanceApiConstants;
 import com.binance.api.client.domain.OrderSide;
 import com.binance.api.client.domain.OrderType;
 import com.binance.api.client.domain.TimeInForce;
 import com.binance.api.client.domain.account.Account;
 import com.binance.api.client.domain.account.NewOrder;
+import com.binance.api.client.domain.market.Candlestick;
+import com.binance.api.client.domain.market.CandlestickInterval;
+import com.binance.api.connect.AccountInfo;
+import com.binance.api.examples.CandleSticksCache;
 
-import AccountInfo.AccountInfo;
+import Entities.TASignals;
 import reports.Report;
 
 /**
@@ -27,33 +32,50 @@ import reports.Report;
  * 
  */
 
-public class AssetManager {
-	private String symbol, assetA;
+public class AssetObserver {
+
 	private TASignals signals;
 	private final double tPercent = 1.05; // Trailing Percentage
-	private double curPrice;
+	private Double curPrice;
 	private double sellTrailPrice = 0;
 	private boolean useMaxTrailPrice = false;
-	BinanceApiWebSocketClient bsc = AccountInfo.getSocketClient();
+	private String symbol, assetA;
+	private CandleSticksCacheImpl candleCache;
 
-	public AssetManager(String assetA, String assetB) {
-		this.assetA = assetA.toUpperCase();
+	public AssetObserver(String assetA, String assetB) {
+		this.assetA = assetA;
 		symbol = String.format("%s%s", assetA, assetB).toLowerCase();
-		// Init symbol
-		signals = new TASignals(symbol);
-
-		// Opens a socket connection and constantly updates the current price while
-		// kicking off a price fetch event.
-		bsc.onSingleMarketTickerEvent(symbol, response -> {
-			curPrice = response.getBestBidPrice();
-			if (useMaxTrailPrice) {
-				sellTrailPrice = Math.max(curPrice, sellTrailPrice);
-			}
-			onPriceFetchEvent();
-		});
+		System.out.println("Started Asset Observer for pair: " + symbol);
+		candleCache = new CandleSticksCacheImpl(symbol, CandlestickInterval.FOUR_HOURLY);
+		new TASignals(candleCache.getCandlesticksCache());
 	}
 
-	public void placeMarketSell() {
+	public class CandleSticksCacheImpl extends CandleSticksCache {
+
+		public CandleSticksCacheImpl(String symbol, CandlestickInterval interval) {
+			super(symbol, interval);
+		}
+
+		@Override
+		public void onCandleStickEvent() {
+			updateCandle(this.getCandlesticksCache());
+		}
+	}
+
+	public void updateCandle(Map<Long, Candlestick> candleStickMap) {
+		signals.updateCandles(candleStickMap);
+		if (curPrice != null) {
+			checkTrailingStopSell();
+		}
+		System.out.println("Update Candle event: " + this.toString());
+	}
+
+	public void disconnect() {
+		candleCache.disconnect();
+	}
+
+	private void placeMarketSell() {
+		System.out.println("Place Market sell :" + this.toString());
 		useMaxTrailPrice = false;
 		sellTrailPrice = 0;
 
@@ -63,34 +85,24 @@ public class AssetManager {
 			// client.newOrder(order, response -> System.out.println(response));
 			Report.createReport(order.toString());
 			Report.createReport(this.toString());
-			disconnect();
 		});
 
 	}
 
-	public void checkTrailingStopSell() {
+	private void checkTrailingStopSell() {
 		// Market sell when the market price goes below the last support point or below
 		// the trailing price (5% below the max reached value).
+		System.out.println("Check trailling stop sell: " + this.toString());
 		if (signals.getSellSignal(curPrice) || (useMaxTrailPrice && curPrice < sellTrailPrice / tPercent)) {
 			placeMarketSell();
 		}
 
 	}
 
-	public void onPriceFetchEvent() {
+	public void updatePrice(double price) {
+		curPrice = price;
 		checkTrailingStopSell();
-	}
-
-	private void disconnect() {
-		signals.disconnect();
-		bsc.close();
-		try {
-			// Waits for this thread to end.
-			Thread.currentThread().join();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		System.out.println("Update Price event: " + this.toString());
 	}
 
 	public String toString() {
@@ -99,6 +111,14 @@ public class AssetManager {
 				.append("\nCurrentPrice", curPrice).append("TMaxPrice", sellTrailPrice / tPercent)
 				.append("TrendDirection", signals.getTrendDiretion(curPrice)).append("\nSignals\n", signals.toString())
 				.toString();
+	}
+
+	public String getSymbol() {
+		return symbol;
+	}
+
+	public String getAssetA() {
+		return assetA;
 	}
 
 }

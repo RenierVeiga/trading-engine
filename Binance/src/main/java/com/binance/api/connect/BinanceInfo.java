@@ -1,11 +1,9 @@
-package exchangeInfo;
+package com.binance.api.connect;
 
 import java.util.List;
 import java.util.TreeSet;
 
 import com.binance.api.client.domain.general.SymbolInfo;
-
-import AccountInfo.AccountInfo;
 
 public class BinanceInfo {
 
