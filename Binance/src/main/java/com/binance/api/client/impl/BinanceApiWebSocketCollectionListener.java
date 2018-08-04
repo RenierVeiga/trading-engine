@@ -1,8 +1,10 @@
 package com.binance.api.client.impl;
 
 import java.io.IOException;
+import java.util.List;
 
 import com.binance.api.client.BinanceApiCallback;
+import com.binance.api.client.domain.event.AllMarketTickersEvent;
 import com.binance.api.client.exception.BinanceApiException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,39 +16,34 @@ import okhttp3.WebSocketListener;
 /**
  * Binance API WebSocket listener.
  */
-public class BinanceApiWebSocketListener<T> extends WebSocketListener {
+public class BinanceApiWebSocketCollectionListener<T> extends WebSocketListener {
 
 	private BinanceApiCallback<T> callback;
 
-	private Class<T> eventClass;
-
-	private TypeReference<T> eventTypeReference;
-
 	private boolean closing = false;
 
-	public BinanceApiWebSocketListener(BinanceApiCallback<T> callback, Class<T> eventClass) {
+	public BinanceApiWebSocketCollectionListener(BinanceApiCallback<T> callback) {
 		this.callback = callback;
-		this.eventClass = eventClass;
-	}
-
-	public BinanceApiWebSocketListener(BinanceApiCallback<T> callback) {
-		this.callback = callback;
-		this.eventTypeReference = new TypeReference<T>() {
-		};
 	}
 
 	@Override
 	public void onMessage(WebSocket webSocket, String text) {
 		ObjectMapper mapper = new ObjectMapper();
 		try {
+			TypeReference<List<AllMarketTickersEvent>> mapType = new TypeReference<List<AllMarketTickersEvent>>() {
+			};
+
 			T event = null;
-			if (eventClass == null) {
-				event = mapper.readValue(text, eventTypeReference);
-			} else {
-				event = mapper.readValue(text, eventClass);
-			}
+
+			// event = mapper.readValue(text,
+			// mapper.getTypeFactory().constructCollectionType(List.class,
+			// AllMarketTickersEvent.class));
+
+			event = mapper.readValue(text, mapType);
+
 			callback.onResponse(event);
 		} catch (IOException e) {
+			e.printStackTrace();
 			throw new BinanceApiException(e);
 		}
 	}

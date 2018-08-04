@@ -67,7 +67,9 @@ public class AccountBalanceStreamSubject {
 			if (response.getEventType() == UserDataUpdateEventType.ACCOUNT_UPDATE) {
 				// Override cached asset balances
 				for (AssetBalance assetBalance : response.getAccountUpdateEvent().getBalances()) {
-					accountBalanceCache.put(assetBalance.getAsset(), assetBalance);
+					if (Double.parseDouble(assetBalance.getFree()) > 0.1) {
+						accountBalanceCache.put(assetBalance.getAsset(), assetBalance);
+					}
 				}
 				// Update observers subscribed to this message.
 				updateObservers();

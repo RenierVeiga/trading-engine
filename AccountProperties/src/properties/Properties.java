@@ -23,7 +23,7 @@ public class Properties {
 
 	public static Properties getInstance() {
 		try (InputStream inputStream = new FileInputStream(
-				"C:\\Users\\renie\\git\\trading-engine\\AccountInfo\\src\\properties\\config.properties")) {
+				"C:\\Users\\renie\\git\\trading-engine\\AccountProperties\\src\\properties\\config.properties")) {
 			p.load(inputStream);
 			// key = value from txt file.
 			key = p.getProperty("key");

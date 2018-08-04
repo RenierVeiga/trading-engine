@@ -1,6 +1,8 @@
 package Entities;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -18,10 +20,9 @@ import Utils.Enums.TrendDirection;
 public class TASignals {
 
 	private ArrayList<Candlestick> candleStickList = new ArrayList<Candlestick>();
-	private ArrayList<ShortCandle> candleStickMaxList = new ArrayList<ShortCandle>();
-	private ArrayList<ShortCandle> candleStickMinList = new ArrayList<ShortCandle>();
-	private final int nCandlesToCompare = 20;
-	// TODO - Add flag to indicate that updateCandles was called.
+	private Map<Long, ShortCandle> candleStickMaxMap = new LinkedHashMap<Long, ShortCandle>();
+	private Map<Long, ShortCandle> candleStickMinMap = new LinkedHashMap<Long, ShortCandle>();
+	private final int nCandlesToCompare = 24;
 
 	public TASignals(Map<Long, Candlestick> candleStickMap) {
 		candleStickList = new ArrayList<Candlestick>(candleStickMap.values());
@@ -34,68 +35,90 @@ public class TASignals {
 		loadSupResPoints();
 	}
 
-	// This method loads the support and resistance points for a given pair
+	// This method loads the support and resistance points for a given pair.
 	private void loadSupResPoints() {
-		// Reset list to free memory
-		candleStickMaxList = new ArrayList<ShortCandle>();
-		candleStickMinList = new ArrayList<ShortCandle>();
-		// Iterates over all candles
-		int indexOfLastItem = Math.max(candleStickList.size() - 2, 0);
-		for (int i = indexOfLastItem; i > (indexOfLastItem - 4 * nCandlesToCompare);) {
-			ShortCandle pMin = null;
-			ShortCandle pMax = null;
-			// Iterates over the x candles at the time
+		// Reset list to free memory.
+		candleStickMaxMap = new LinkedHashMap<Long, ShortCandle>();
+		candleStickMinMap = new LinkedHashMap<Long, ShortCandle>();
+		boolean firstSet = true;
+		// Start with the last item and decrement.
+		int indexOfLastItem = candleStickList.size() - 1;
+		// Stop iterating when we reach 0 or 4x the number of candles to compare.
+		int stopCondition = Math.max((indexOfLastItem - 4 * nCandlesToCompare), 0);
+		ShortCandle pMin = null;
+		ShortCandle pMax = null;
+		// Decrement i by half of the number of candles to compare to ensure a x/2
+		// distance between critical points.
+		for (int i = indexOfLastItem; i > stopCondition; i = i - (nCandlesToCompare / 2)) {
 
-			for (int c = i; c > Math.max(i - nCandlesToCompare, 0); c--) {
-				ShortCandle previous = new ShortCandle(candleStickList.get(c - 1));
-				ShortCandle current = new ShortCandle(candleStickList.get(c));
-				ShortCandle next = new ShortCandle(candleStickList.get(c + 1));
-				// If (previous < current > next && current > previousMax){maximum found}
-				if (current.getHigh() > next.getHigh() && current.getHigh() > previous.getHigh()
-						&& (pMax == null || current.getHigh() > pMax.getHigh())) {
-					pMax = current;
-				}
-				// If (previous > current < next && current < previousMin){minimum found}
-				if (current.getLow() < next.getLow() && current.getLow() < previous.getLow()
-						&& (pMin == null || current.getLow() < pMin.getLow())) {
-					pMin = current;
-				}
+			// Iterates over the x candles at the time.
+			List<Candlestick> subList = candleStickList.subList(Math.max(i - nCandlesToCompare, 0), i);
+			ShortCandle pMinTemp = getMin(subList);
+			ShortCandle pMaxTemp = getMax(subList);
+			if (pMin == null || pMin.getLow() > pMinTemp.getLow()) {
+				pMin = pMinTemp;
 			}
-			i = i - (nCandlesToCompare + 1);
-			if (pMax != null) {
-				if (candleStickMaxList.size() > 0) {
-					ShortCandle last = candleStickMaxList.get(candleStickMaxList.size() - 1);
-					if (!last.getKey().equals(pMax.getKey())) {
-						candleStickMaxList.add(pMax);
-					}
-				} else {
-					candleStickMaxList.add(pMax);
-				}
+			if (pMax == null || pMax.getHigh() < pMaxTemp.getHigh()) {
+				pMax = pMaxTemp;
 			}
-			if (pMin != null) {
-				if (candleStickMinList.size() > 0) {
-					ShortCandle last = candleStickMinList.get(candleStickMinList.size() - 1);
-					if (!last.getKey().equals(pMin.getKey())) {
-						candleStickMinList.add(pMin);
-					}
-				} else {
-					candleStickMinList.add(pMin);
+
+			if (!firstSet) {
+				// Add to list only after the second iteration to ensure a minimum spacing
+				// between critical points.
+				if (pMin != null) {
+					candleStickMinMap.put(pMin.key, new ShortCandle(pMin));
 				}
+
+				if (pMax != null) {
+					candleStickMaxMap.put(pMax.key, new ShortCandle(pMax));
+				}
+				pMin = null;
+				pMax = null;
+				firstSet = true;
+			} else {
+				firstSet = false;
 			}
 		}
 	}
 
+	private ShortCandle getMin(List<Candlestick> candleStickList) {
+		ShortCandle minCandle = null;
+		for (int i = 1; i < candleStickList.size() - 1; i++) {
+			double previous = Double.parseDouble(candleStickList.get(i - 1).getLow());
+			double current = Double.parseDouble(candleStickList.get(i).getLow());
+			double next = Double.parseDouble(candleStickList.get(i + 1).getLow());
+			if ((minCandle == null && current < previous && current < next)
+					|| (minCandle != null && current < minCandle.getLow())) {
+				minCandle = new ShortCandle(candleStickList.get(i));
+			}
+		}
+		return minCandle;
+	}
+
+	private ShortCandle getMax(List<Candlestick> candleStickList) {
+		ShortCandle maxCandle = null;
+		for (int i = 1; i < candleStickList.size() - 1; i++) {
+			double previous = Double.parseDouble(candleStickList.get(i - 1).getHigh());
+			double current = Double.parseDouble(candleStickList.get(i).getHigh());
+			double next = Double.parseDouble(candleStickList.get(i + 1).getHigh());
+			if ((maxCandle == null && current > previous && current > next)
+					|| (maxCandle != null && current > maxCandle.getHigh())) {
+				maxCandle = new ShortCandle(candleStickList.get(i));
+			}
+		}
+		return maxCandle;
+	}
+
 	public TrendDirection getTrendDiretion(double curPrice) {
 		// Using the last few support points we can determine the direction that the
-		// trend is going (up or Down).
-		// I chose to use the last 2 support points, the current price and the
-		// resistance to determine
-		// the direction.
+		// trend is going (up or Down). I chose to use the last 2 support points,
+		// and the resistance to determine the direction.
 		double fSPoint, sSPoint, r1;
 		TrendDirection diretion = TrendDirection.UNDETERMINED;
-		if (candleStickMinList.size() > 0) {
-			fSPoint = candleStickMinList.get(0).getLow();
-			sSPoint = candleStickMinList.get(1).getLow();
+		List<ShortCandle> list = new ArrayList<ShortCandle>(candleStickMinMap.values());
+		if (list.size() > 0) {
+			fSPoint = list.get(0).getLow();
+			sSPoint = list.get(1).getLow();
 			r1 = getLastResistancePoint();
 			// If (curPrice > resistance > (fSPoint and sSPoint(){then we have a break-up}
 			if (curPrice > r1 && r1 > fSPoint && r1 > sSPoint) {
@@ -126,8 +149,8 @@ public class TASignals {
 
 	public boolean getSellSignal(double curPrice) {
 		// Signal to buy when trend is moving up and the price is above the last high
-		if (getTrendDiretion(curPrice) != TrendDirection.BREAKUP
-				|| getTrendDiretion(curPrice) != TrendDirection.HIGHERMIN) {
+		TrendDirection trend = getTrendDiretion(curPrice);
+		if (trend != TrendDirection.BREAKUP && trend != TrendDirection.HIGHERMIN) {
 			return true;
 		} else {
 			return false;
@@ -135,31 +158,32 @@ public class TASignals {
 	}
 
 	public double getLastSupportPoint() {
-		if (candleStickMinList.size() > 0) {
-			return candleStickMinList.get(0).getLow();
-		}
-		return 0;
+		List<ShortCandle> list = new ArrayList<ShortCandle>(candleStickMinMap.values());
+		return list.get(0).getLow();
+	}
+
+	public double getBeforeLastSupportPoint() {
+		List<ShortCandle> list = new ArrayList<ShortCandle>(candleStickMinMap.values());
+		return list.get(1).getLow();
 	}
 
 	public double getLastResistancePoint() {
-		if (candleStickMaxList.size() > 0) {
-			return candleStickMaxList.get(0).getHigh();
-		}
-		return Double.MAX_VALUE;
+		List<ShortCandle> list = new ArrayList<ShortCandle>(candleStickMaxMap.values());
+		return list.get(0).getHigh();
 	}
 
 	public String getLastSupportPoints() {
 		ToStringBuilder str = new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE);
-		for (int i = 0; i < candleStickMinList.size(); i++) {
-			str.append("Val" + i, candleStickMinList.get(i).getLow());
+		for (ShortCandle candle : candleStickMinMap.values()) {
+			str.append("Val" + candle.getOpen(), candle.getLow());
 		}
 		return str.toString();
 	}
 
 	public String getLastResistancePoints() {
 		ToStringBuilder str = new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE);
-		for (int i = 0; i < candleStickMaxList.size(); i++) {
-			str.append("Val" + i, candleStickMaxList.get(i).getHigh());
+		for (ShortCandle candle : candleStickMaxMap.values()) {
+			str.append("Val" + candle.getOpen(), candle.getHigh());
 		}
 		return str.toString();
 	}
@@ -167,6 +191,7 @@ public class TASignals {
 	public String toString() {
 		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
 				.append("\n\tLastSupportPoint", getLastSupportPoint())
+				.append("\n\tBeforeLastSupportPoint", getBeforeLastSupportPoint())
 				.append("\n\tLastResitancePoint", getLastResistancePoint()).toString();
 	}
 }

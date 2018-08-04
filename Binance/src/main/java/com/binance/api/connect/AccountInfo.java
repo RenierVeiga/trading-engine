@@ -15,6 +15,7 @@ public class AccountInfo {
 
 	private static final BinanceApiAsyncRestClient restAsynClient = factory.newAsyncRestClient();
 	private static final BinanceApiRestClient restClient = factory.newRestClient();
+	private static final BinanceApiWebSocketClient socketClient = factory.newWebSocketClient();
 
 	public AccountInfo() {
 
@@ -28,8 +29,8 @@ public class AccountInfo {
 		return restAsynClient;
 	}
 
-	public static synchronized BinanceApiWebSocketClient getSocketClient() {
-		return factory.newWebSocketClient();
+	public static BinanceApiWebSocketClient getSocketClient() {
+		return socketClient;
 	}
 
 }

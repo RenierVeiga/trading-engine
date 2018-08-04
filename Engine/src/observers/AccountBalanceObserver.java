@@ -1,10 +1,12 @@
 package observers;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import com.binance.api.connect.BinanceInfo;
 
-import subjects.PriceStreamSubject;
+import subjects.CandleStickStreamSubject;
 
 public class AccountBalanceObserver {
 
@@ -19,7 +21,7 @@ public class AccountBalanceObserver {
 
 	private Set<String> symbols = BinanceInfo.getSymbols();
 
-	private PriceStreamSubject psj = PriceStreamSubject.getInstance();
+	private Map<String, CandleStickStreamSubject> candleStreamMap = new HashMap<String, CandleStickStreamSubject>();
 	private static AccountBalanceObserver instance = new AccountBalanceObserver();
 
 	private AccountBalanceObserver() {
@@ -29,23 +31,25 @@ public class AccountBalanceObserver {
 		String btcPair, usdtPair;
 
 		for (String asset : assets) {
+			asset = asset.toUpperCase();
 			btcPair = String.format("%sBTC", asset);
 			usdtPair = String.format("%sUSDT", asset);
 			if (symbols.contains(btcPair)) {
 				// Register xxxbtc pair.
-				psj.register(btcPair, new AssetObserver(asset, "BTC"));
+				candleStreamMap.put(btcPair, new CandleStickStreamSubject(asset, "BTC"));
 			}
 			if (symbols.contains(usdtPair)) {
 				// Register xxxusdt pair.
-				psj.register(usdtPair, new AssetObserver(asset, "USDT"));
+				candleStreamMap.put(usdtPair, new CandleStickStreamSubject(asset, "USDT"));
 			}
 		}
 		// Unregister assets not in the list.
-		for (AssetObserver assetObserver : psj.getObserverMap().values()) {
-			if (!assets.contains(assetObserver.getAssetA())) {
-				// Close socket connection and unregister for updates.
-				assetObserver.disconnect();
-				psj.unregister(assetObserver.getSymbol());
+		for (CandleStickStreamSubject item : candleStreamMap.values()) {
+			if (!assets.contains(item.getAssetA())) {
+				// Unregister for updates.
+				System.out.println("Unregistered: " + item.getSymbol());
+				item.unregister();
+				candleStreamMap.remove(item.getSymbol());
 			}
 		}
 	}

@@ -13,7 +13,7 @@ public class BinanceInfo {
 
 	static {
 		for (SymbolInfo symbol : symbolInfoList) {
-			symbolList.add(symbol.getSymbol());
+			symbolList.add(symbol.getSymbol().toUpperCase());
 		}
 	}
 

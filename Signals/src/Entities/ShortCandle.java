@@ -14,6 +14,14 @@ public class ShortCandle {
 		close = Double.parseDouble(candle.getClose());
 	}
 
+	public ShortCandle(ShortCandle candle) {
+		key = candle.getKey();
+		low = candle.getLow();
+		high = candle.getHigh();
+		open = candle.getOpen();
+		close = candle.getClose();
+	}
+
 	public Long getKey() {
 		return key;
 	}

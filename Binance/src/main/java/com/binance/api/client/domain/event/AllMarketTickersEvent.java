@@ -8,8 +8,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  */
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AllMarketTickersEvent {
+
+	public AllMarketTickersEvent() {
+	}
 
 	@JsonProperty("e")
 	private String eventType;
@@ -36,19 +40,19 @@ public class AllMarketTickersEvent {
 	private double currentDaysClosePrice;
 
 	@JsonProperty("Q")
-	private long closeTradesQuantity;
+	private double closeTradesQuantity;
 
 	@JsonProperty("a")
 	private double bestAskPrice;
 
 	@JsonProperty("A")
-	private long bestAskQuantity;
+	private double bestAskQuantity;
 
 	@JsonProperty("b")
 	private double bestBidPrice;
 
 	@JsonProperty("B")
-	private long bestBidQuantity;
+	private double bestBidQuantity;
 
 	@JsonProperty("o")
 	private double openPrice;
@@ -60,10 +64,10 @@ public class AllMarketTickersEvent {
 	private double lowPrice;
 
 	@JsonProperty("v")
-	private long totalTradedBaseAssetVolume;
+	private double totalTradedBaseAssetVolume;
 
 	@JsonProperty("q")
-	private long totalTradedQuoteAssetVolume;
+	private double totalTradedQuoteAssetVolume;
 
 	@JsonProperty("O")
 	private long statisticesOpenTime;
@@ -96,7 +100,7 @@ public class AllMarketTickersEvent {
 		this.eventTime = eventTime;
 	}
 
-	public String getSymbol() {
+	public synchronized String getSymbol() {
 		return symbol;
 	}
 
@@ -144,11 +148,11 @@ public class AllMarketTickersEvent {
 		this.currentDaysClosePrice = currentDaysClosePrice;
 	}
 
-	public long getCloseTradesQuantity() {
+	public double getCloseTradesQuantity() {
 		return closeTradesQuantity;
 	}
 
-	public void setCloseTradesQuantity(long closeTradesQuantity) {
+	public void setCloseTradesQuantity(double closeTradesQuantity) {
 		this.closeTradesQuantity = closeTradesQuantity;
 	}
 
@@ -160,11 +164,11 @@ public class AllMarketTickersEvent {
 		this.bestAskPrice = bestAskPrice;
 	}
 
-	public long getBestAskQuantity() {
+	public double getBestAskQuantity() {
 		return bestAskQuantity;
 	}
 
-	public void setBestAskQuantity(long bestAskQuantity) {
+	public void setBestAskQuantity(double bestAskQuantity) {
 		this.bestAskQuantity = bestAskQuantity;
 	}
 
@@ -176,11 +180,11 @@ public class AllMarketTickersEvent {
 		this.bestBidPrice = bestBidPrice;
 	}
 
-	public long getBestBidQuantity() {
+	public double getBestBidQuantity() {
 		return bestBidQuantity;
 	}
 
-	public void setBestBidQuantity(long bestBidQuantity) {
+	public void setBestBidQuantity(double bestBidQuantity) {
 		this.bestBidQuantity = bestBidQuantity;
 	}
 
@@ -208,19 +212,19 @@ public class AllMarketTickersEvent {
 		this.lowPrice = lowPrice;
 	}
 
-	public long getTotalTradedBaseAssetVolume() {
+	public double getTotalTradedBaseAssetVolume() {
 		return totalTradedBaseAssetVolume;
 	}
 
-	public void setTotalTradedBaseAssetVolume(long totalTradedBaseAssetVolume) {
+	public void setTotalTradedBaseAssetVolume(double totalTradedBaseAssetVolume) {
 		this.totalTradedBaseAssetVolume = totalTradedBaseAssetVolume;
 	}
 
-	public long getTotalTradedQuoteAssetVolume() {
+	public double getTotalTradedQuoteAssetVolume() {
 		return totalTradedQuoteAssetVolume;
 	}
 
-	public void setTotalTradedQuoteAssetVolume(long totalTradedQuoteAssetVolume) {
+	public void setTotalTradedQuoteAssetVolume(double totalTradedQuoteAssetVolume) {
 		this.totalTradedQuoteAssetVolume = totalTradedQuoteAssetVolume;
 	}
 

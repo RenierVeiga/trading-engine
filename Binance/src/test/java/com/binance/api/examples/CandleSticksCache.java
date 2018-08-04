@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.binance.api.client.BinanceApiClientFactory;
-import com.binance.api.client.BinanceApiRestClient;
 import com.binance.api.client.BinanceApiWebSocketClient;
 import com.binance.api.client.domain.market.Candlestick;
 import com.binance.api.client.domain.market.CandlestickInterval;
@@ -24,6 +22,8 @@ public abstract class CandleSticksCache {
 	 * date.
 	 */
 	private Map<Long, Candlestick> candlesticksCache;
+	private Candlestick lastCandle;
+	private double closePrice;
 
 	public CandleSticksCache(String symbol, CandlestickInterval interval) {
 		initializeCandlestickCache(symbol, interval);
@@ -34,13 +34,14 @@ public abstract class CandleSticksCache {
 	 * Initializes the candlestick cache by using the REST API.
 	 */
 	private void initializeCandlestickCache(String symbol, CandlestickInterval interval) {
-		BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance();
-		BinanceApiRestClient client = factory.newRestClient();
-		List<Candlestick> candlestickBars = client.getCandlestickBars(symbol.toUpperCase(), interval);
+		List<Candlestick> candlestickBars = AccountInfo.getRestClient().getCandlestickBars(symbol.toUpperCase(),
+				interval);
 
 		this.candlesticksCache = new TreeMap<>();
 		for (Candlestick candlestickBar : candlestickBars) {
 			candlesticksCache.put(candlestickBar.getOpenTime(), candlestickBar);
+			lastCandle = candlestickBar;
+			closePrice = Double.parseDouble(lastCandle.getClose());
 		}
 	}
 
@@ -71,7 +72,10 @@ public abstract class CandleSticksCache {
 
 			// Store the updated candlestick in the cache
 			candlesticksCache.put(openTime, updateCandlestick);
+			lastCandle = updateCandlestick;
+			closePrice = Double.parseDouble(lastCandle.getClose());
 			onCandleStickEvent();
+			System.out.println(updateCandlestick.toString());
 		});
 	}
 
@@ -85,7 +89,12 @@ public abstract class CandleSticksCache {
 		return candlesticksCache;
 	}
 
-	public void disconnect() {
-		client.close();
+	public Candlestick getLastCandle() {
+		return lastCandle;
 	}
+
+	public double getClosePrice() {
+		return closePrice;
+	}
+
 }

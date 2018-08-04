@@ -36,15 +36,13 @@ public class BtcUsdSignals {
 	}
 
 	public void updateCandle(Map<Long, Candlestick> candleStickMap) {
+		System.out.println("Update Candle event for: " + SYMBOL);
 		signals.updateCandles(candleStickMap);
 	}
 
 	public void updatePrice(Double curPrice) {
+		System.out.println("Update Price event for: " + SYMBOL);
 		BtcUsdSignals.curPrice = curPrice;
-	}
-
-	public void disconnect() {
-		candleCache.disconnect();
 	}
 
 	public static TrendDirection getTrend() {
