@@ -5,16 +5,12 @@ import java.util.Date;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import com.binance.api.client.constant.BinanceApiConstants;
-import com.binance.api.client.domain.OrderSide;
-import com.binance.api.client.domain.OrderType;
-import com.binance.api.client.domain.TimeInForce;
-import com.binance.api.client.domain.account.Account;
 import com.binance.api.client.domain.account.NewOrder;
+import com.binance.api.client.domain.market.CandlestickInterval;
 import com.binance.api.connect.AccountInfo;
 
 import Entities.TASignals;
 import reports.Report;
-import subjects.CandleStickStreamSubject.CandleSticksCacheImpl;
 
 /**
  * @author Renier Veiga
@@ -29,66 +25,53 @@ import subjects.CandleStickStreamSubject.CandleSticksCacheImpl;
  * 
  */
 
-public class AssetObserver {
+public class AssetObserver extends TASignals {
 
-	private TASignals signals;
 	private final double tPercent = 1.05; // Trailing Percentage
-	private Double curPrice;
-	private double sellTrailPrice = 0;
 	private String symbol, assetA;
+	private String quantity;
 
-	public AssetObserver(String assetA, String assetB, CandleSticksCacheImpl candleStickMap) {
+	public AssetObserver(String assetA, String assetB, String quantity) {
+		super(String.format("%s%s", assetA, assetB).toUpperCase(), CandlestickInterval.HOURLY);
 		this.assetA = assetA;
+		this.quantity = quantity;
 		symbol = String.format("%s%s", assetA, assetB).toUpperCase();
-		System.out.println("Started Asset Observer for pair: " + symbol);
-		signals = new TASignals(candleStickMap.getCandlesticksCache());
-		curPrice = candleStickMap.getClosePrice();
+		Report.createReport("Started Asset Observer for pair: " + symbol);
 	}
 
-	public void update(CandleSticksCacheImpl candleStickMap) {
-
-		signals.updateCandles(candleStickMap.getCandlesticksCache());
-		curPrice = candleStickMap.getClosePrice();
-		System.out.println("Update Candle event for: " + this.symbol);
-		System.out.println("Trend: " + signals.getTrendDiretion(curPrice) + " Support: " + signals.toString());
-		if (curPrice > sellTrailPrice) {
-			sellTrailPrice = curPrice;
-		}
-		if (curPrice != null) {
-			checkTrailingStopSell();
-		}
+	public void update(String quantity) {
+		this.quantity = quantity;
+		print("Update Balance Event");
+		checkTrailingStopSell();
 	}
 
 	private void placeMarketSell() {
-		System.out.println("Place Market sell :" + this.toString());
-		sellTrailPrice = 0;
-
-		AccountInfo.getRestAsyncClient().getAccount((Account response) -> {
-			String quantity = String.valueOf(response.getAssetBalance(assetA).getFree());
-			NewOrder order = new NewOrder(symbol, OrderSide.SELL, OrderType.MARKET, TimeInForce.GTC, quantity);
-			AccountInfo.getRestAsyncClient().newOrder(order,
-					orderResponse -> System.out.println(orderResponse.toString()));
-			Report.createReport(order.toString());
-			Report.createReport(this.toString());
-			signals = null;
+		AccountInfo.getRestAsyncClient().newOrder(NewOrder.marketSell(symbol, quantity), response -> {
+			Report.createReport("Sell Order Success: \n" + this.toString());
 		});
-
 	}
 
 	private void checkTrailingStopSell() {
 		// Market sell when the market price goes below the last support point or below
 		// the trailing price (5% below the max reached value).
-		if (signals.getSellSignal(curPrice) || (curPrice < (Double) sellTrailPrice / tPercent)) {
+		if (this.getSellSignal() || (this.getClosePrice() < (this.getSellTrailPrice() / tPercent))) {
 			placeMarketSell();
 		}
+		print("Check Trailing stop ");
 	}
 
 	public String toString() {
 		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
 				.append("\n\nSymbol", symbol.toUpperCase()).append("Date", new Date().toString())
-				.append("\nCurrentPrice", curPrice).append("TMaxPrice", (Double) sellTrailPrice / tPercent)
-				.append("TrendDirection", signals.getTrendDiretion(curPrice)).append("\nSignals\n", signals.toString())
-				.toString();
+				.append("\nCurrentPrice", this.getClosePrice())
+				.append("TMaxPrice", (this.getSellTrailPrice() / tPercent))
+				.append("TrendDirection", this.getTrendDiretion()).toString();
+	}
+
+	private void print(String message) {
+		System.out.println("Message for: " + this.symbol + " " + message);
+		System.out.println("Trailling price = " + this.getSellTrailPrice() / tPercent);
+		System.out.println("Trend: " + this.getTrendDiretion() + " Support: " + this.toString());
 	}
 
 	public String getSymbol() {
@@ -99,4 +82,10 @@ public class AssetObserver {
 		return assetA;
 	}
 
+	@Override
+	public void onCandleStickEvent() {
+		// TODO Auto-generated method stub
+		this.loadSupResPoints();
+		checkTrailingStopSell();
+	}
 }

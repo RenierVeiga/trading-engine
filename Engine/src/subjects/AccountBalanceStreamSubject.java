@@ -3,6 +3,7 @@ package subjects;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.binance.api.client.BinanceApiWebSocketClient;
 import com.binance.api.client.domain.account.Account;
 import com.binance.api.client.domain.account.AssetBalance;
 import com.binance.api.client.domain.event.UserDataUpdateEvent.UserDataUpdateEventType;
@@ -43,13 +44,13 @@ public class AccountBalanceStreamSubject {
 	 *
 	 * @return a listenKey that can be used with the user data streaming API.
 	 */
-	private String initializeAssetBalanceCacheAndStreamSession() {
+	public static String initializeAssetBalanceCacheAndStreamSession() {
 
 		Account account = AccountInfo.getRestClient().getAccount();
 
 		accountBalanceCache = new TreeMap<>();
 		for (AssetBalance assetBalance : account.getBalances()) {
-			if (Double.parseDouble(assetBalance.getFree()) > 0.1) {
+			if (Double.parseDouble(assetBalance.getFree()) > 0) {
 				System.out.println(assetBalance.toString());
 				accountBalanceCache.put(assetBalance.getAsset(), assetBalance);
 			}
@@ -62,12 +63,12 @@ public class AccountBalanceStreamSubject {
 	 * Begins streaming of agg trades events.
 	 */
 	private void startAccountBalanceEventStreaming(String listenKey) {
-
-		AccountInfo.getSocketClient().onUserDataUpdateEvent(listenKey, response -> {
+		BinanceApiWebSocketClient client = AccountInfo.getSocketClient();
+		client.onUserDataUpdateEvent(listenKey, response -> {
 			if (response.getEventType() == UserDataUpdateEventType.ACCOUNT_UPDATE) {
 				// Override cached asset balances
 				for (AssetBalance assetBalance : response.getAccountUpdateEvent().getBalances()) {
-					if (Double.parseDouble(assetBalance.getFree()) > 0.1) {
+					if (Double.parseDouble(assetBalance.getFree()) > 0) {
 						accountBalanceCache.put(assetBalance.getAsset(), assetBalance);
 					}
 				}
@@ -77,13 +78,13 @@ public class AccountBalanceStreamSubject {
 		});
 	}
 
-	public Map<String, AssetBalance> getAccountBalanceCache() {
+	public synchronized Map<String, AssetBalance> getAccountBalanceCache() {
 		return accountBalanceCache;
 	}
 
-	public void updateObservers() {
+	public static void updateObservers() {
 		System.out.println("Account Balance Update.");
-		observer.update(accountBalanceCache.keySet());
+		observer.update(accountBalanceCache);
 	}
 
 	public static AccountBalanceStreamSubject getInstance() {

@@ -9,6 +9,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import com.binance.api.client.constant.BinanceApiConstants;
 import com.binance.api.client.domain.market.Candlestick;
+import com.binance.api.client.domain.market.CandlestickInterval;
+import com.binance.api.examples.CandleSticksCache;
 
 import Utils.Enums.TrendDirection;
 
@@ -17,26 +19,20 @@ import Utils.Enums.TrendDirection;
  * 
  *         Date: Mar 18, 2018
  */
-public class TASignals {
+public abstract class TASignals extends CandleSticksCache {
 
 	private ArrayList<Candlestick> candleStickList = new ArrayList<Candlestick>();
 	private Map<Long, ShortCandle> candleStickMaxMap = new LinkedHashMap<Long, ShortCandle>();
 	private Map<Long, ShortCandle> candleStickMinMap = new LinkedHashMap<Long, ShortCandle>();
 	private final int nCandlesToCompare = 24;
 
-	public TASignals(Map<Long, Candlestick> candleStickMap) {
-		candleStickList = new ArrayList<Candlestick>(candleStickMap.values());
-		loadSupResPoints();
-	}
-
-	// Update min and max Lists with the last candlestick info.
-	public void updateCandles(Map<Long, Candlestick> candleStickMap) {
-		candleStickList = new ArrayList<Candlestick>(candleStickMap.values());
+	public TASignals(String symbol, CandlestickInterval interval) {
+		super(symbol, interval);
 		loadSupResPoints();
 	}
 
 	// This method loads the support and resistance points for a given pair.
-	private void loadSupResPoints() {
+	protected void loadSupResPoints() {
 		// Reset list to free memory.
 		candleStickMaxMap = new LinkedHashMap<Long, ShortCandle>();
 		candleStickMinMap = new LinkedHashMap<Long, ShortCandle>();
@@ -109,7 +105,7 @@ public class TASignals {
 		return maxCandle;
 	}
 
-	public TrendDirection getTrendDiretion(double curPrice) {
+	public TrendDirection getTrendDiretion() {
 		// Using the last few support points we can determine the direction that the
 		// trend is going (up or Down). I chose to use the last 2 support points,
 		// and the resistance to determine the direction.
@@ -121,16 +117,16 @@ public class TASignals {
 			sSPoint = list.get(1).getLow();
 			r1 = getLastResistancePoint();
 			// If (curPrice > resistance > (fSPoint and sSPoint(){then we have a break-up}
-			if (curPrice > r1 && r1 > fSPoint && r1 > sSPoint) {
+			if (this.getClosePrice() > r1 && r1 > fSPoint && r1 > sSPoint) {
 				diretion = TrendDirection.BREAKUP;
 			}
 			// If (r1 < curPrice > fSPoint > sSPoint){then we have a higher min but no
 			// break-up}
-			else if (curPrice > fSPoint && fSPoint > sSPoint) {
+			else if (this.getClosePrice() > fSPoint && fSPoint > sSPoint) {
 				diretion = TrendDirection.HIGHERMIN;
 			}
 			// If (curPrice < fSPoint || sSPoint){then we have a break down}
-			else if (curPrice < fSPoint || curPrice < sSPoint) {
+			else if (this.getClosePrice() < fSPoint || this.getClosePrice() < sSPoint) {
 				diretion = TrendDirection.BREAKDOWN;
 			}
 			// Else trend is undetermined.
@@ -138,18 +134,18 @@ public class TASignals {
 		return diretion;
 	}
 
-	public boolean getBuySignal(double curPrice) {
+	public boolean getBuySignal() {
 		// Signal to buy when trend is moving up and the price is above the last high
-		if (getTrendDiretion(curPrice) == TrendDirection.BREAKUP) {
+		if (getTrendDiretion() == TrendDirection.BREAKUP) {
 			return true;
 		} else {
 			return false;
 		}
 	}
 
-	public boolean getSellSignal(double curPrice) {
+	public boolean getSellSignal() {
 		// Signal to buy when trend is moving up and the price is above the last high
-		TrendDirection trend = getTrendDiretion(curPrice);
+		TrendDirection trend = getTrendDiretion();
 		if (trend != TrendDirection.BREAKUP && trend != TrendDirection.HIGHERMIN) {
 			return true;
 		} else {

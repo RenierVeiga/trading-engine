@@ -53,4 +53,8 @@ public class Properties {
 	public boolean getMode() {
 		return sellOnlyMode;
 	}
+
+	public void setProperty(String key, String value) {
+		p.setProperty(key, value);
+	}
 }

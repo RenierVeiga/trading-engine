@@ -24,6 +24,7 @@ public abstract class CandleSticksCache {
 	private Map<Long, Candlestick> candlesticksCache;
 	private Candlestick lastCandle;
 	private double closePrice;
+	private double sellTrailPrice = 0;
 
 	public CandleSticksCache(String symbol, CandlestickInterval interval) {
 		initializeCandlestickCache(symbol, interval);
@@ -42,6 +43,7 @@ public abstract class CandleSticksCache {
 			candlesticksCache.put(candlestickBar.getOpenTime(), candlestickBar);
 			lastCandle = candlestickBar;
 			closePrice = Double.parseDouble(lastCandle.getClose());
+			sellTrailPrice = closePrice;
 		}
 	}
 
@@ -74,9 +76,16 @@ public abstract class CandleSticksCache {
 			candlesticksCache.put(openTime, updateCandlestick);
 			lastCandle = updateCandlestick;
 			closePrice = Double.parseDouble(lastCandle.getClose());
+			if (closePrice > sellTrailPrice) {
+				sellTrailPrice = closePrice;
+			}
 			onCandleStickEvent();
 			System.out.println(updateCandlestick.toString());
 		});
+	}
+
+	public double getSellTrailPrice() {
+		return sellTrailPrice;
 	}
 
 	public abstract void onCandleStickEvent();
@@ -95,6 +104,11 @@ public abstract class CandleSticksCache {
 
 	public double getClosePrice() {
 		return closePrice;
+	}
+
+	public void closeClient() {
+		client.close();
+		client = null;
 	}
 
 }
