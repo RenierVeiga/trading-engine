@@ -21,7 +21,6 @@ import Utils.Enums.TrendDirection;
  */
 public abstract class TASignals extends CandleSticksCache {
 
-	private ArrayList<Candlestick> candleStickList = new ArrayList<Candlestick>();
 	private Map<Long, ShortCandle> candleStickMaxMap = new LinkedHashMap<Long, ShortCandle>();
 	private Map<Long, ShortCandle> candleStickMinMap = new LinkedHashMap<Long, ShortCandle>();
 	private final int nCandlesToCompare = 24;
@@ -38,7 +37,7 @@ public abstract class TASignals extends CandleSticksCache {
 		candleStickMinMap = new LinkedHashMap<Long, ShortCandle>();
 		boolean firstSet = true;
 		// Start with the last item and decrement.
-		int indexOfLastItem = candleStickList.size() - 1;
+		int indexOfLastItem = this.getCandleStickList().size() - 1;
 		// Stop iterating when we reach 0 or 4x the number of candles to compare.
 		int stopCondition = Math.max((indexOfLastItem - 4 * nCandlesToCompare), 0);
 		ShortCandle pMin = null;
@@ -48,7 +47,7 @@ public abstract class TASignals extends CandleSticksCache {
 		for (int i = indexOfLastItem; i > stopCondition; i = i - (nCandlesToCompare / 2)) {
 
 			// Iterates over the x candles at the time.
-			List<Candlestick> subList = candleStickList.subList(Math.max(i - nCandlesToCompare, 0), i);
+			List<Candlestick> subList = this.getCandleStickList().subList(Math.max(i - nCandlesToCompare, 0), i);
 			ShortCandle pMinTemp = getMin(subList);
 			ShortCandle pMaxTemp = getMax(subList);
 			if (pMin == null || pMin.getLow() > pMinTemp.getLow()) {
@@ -153,19 +152,31 @@ public abstract class TASignals extends CandleSticksCache {
 		}
 	}
 
-	public double getLastSupportPoint() {
+	public Double getLastSupportPoint() {
 		List<ShortCandle> list = new ArrayList<ShortCandle>(candleStickMinMap.values());
-		return list.get(0).getLow();
+		if (list.size() > 0) {
+			return list.get(0).getLow();
+		} else {
+			return null;
+		}
 	}
 
-	public double getBeforeLastSupportPoint() {
+	public Double getBeforeLastSupportPoint() {
 		List<ShortCandle> list = new ArrayList<ShortCandle>(candleStickMinMap.values());
-		return list.get(1).getLow();
+		if (list.size() > 1) {
+			return list.get(1).getLow();
+		} else {
+			return null;
+		}
 	}
 
-	public double getLastResistancePoint() {
+	public Double getLastResistancePoint() {
 		List<ShortCandle> list = new ArrayList<ShortCandle>(candleStickMaxMap.values());
-		return list.get(0).getHigh();
+		if (list.size() > 0) {
+			return list.get(0).getHigh();
+		} else {
+			return null;
+		}
 	}
 
 	public String getLastSupportPoints() {

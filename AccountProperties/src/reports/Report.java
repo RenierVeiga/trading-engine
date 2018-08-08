@@ -15,6 +15,7 @@ public class Report {
 			fw = new FileWriter(FILENAME, true);
 			bw = new BufferedWriter(fw);
 			bw.write(content + "\n");
+			System.out.println(content + "\n");
 
 		} catch (final IOException e) {
 

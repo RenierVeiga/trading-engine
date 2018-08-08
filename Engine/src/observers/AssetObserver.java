@@ -28,15 +28,14 @@ import reports.Report;
 public class AssetObserver extends TASignals {
 
 	private final double tPercent = 1.05; // Trailing Percentage
-	private String symbol, assetA;
+	private String assetA;
 	private String quantity;
 
 	public AssetObserver(String assetA, String assetB, String quantity) {
 		super(String.format("%s%s", assetA, assetB).toUpperCase(), CandlestickInterval.HOURLY);
 		this.assetA = assetA;
 		this.quantity = quantity;
-		symbol = String.format("%s%s", assetA, assetB).toUpperCase();
-		Report.createReport("Started Asset Observer for pair: " + symbol);
+		Report.createReport("Started Asset Observer for pair: " + this.getSymbol());
 	}
 
 	public void update(String quantity) {
@@ -46,7 +45,8 @@ public class AssetObserver extends TASignals {
 	}
 
 	private void placeMarketSell() {
-		AccountInfo.getRestAsyncClient().newOrder(NewOrder.marketSell(symbol, quantity), response -> {
+		print("Attempt Market Sell");
+		AccountInfo.getRestAsyncClient().newOrder(NewOrder.marketSell(this.getSymbol(), quantity), response -> {
 			Report.createReport("Sell Order Success: \n" + this.toString());
 		});
 	}
@@ -62,20 +62,17 @@ public class AssetObserver extends TASignals {
 
 	public String toString() {
 		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("\n\nSymbol", symbol.toUpperCase()).append("Date", new Date().toString())
+				.append("\nSymbol", this.getSymbol()).append("Date", new Date().toString())
 				.append("\nCurrentPrice", this.getClosePrice())
 				.append("TMaxPrice", (this.getSellTrailPrice() / tPercent))
-				.append("TrendDirection", this.getTrendDiretion()).toString();
+				.append("TrendDirection", this.getTrendDiretion()).append("Last Support", this.getLastSupportPoint())
+				.append("Before Last Support", this.getBeforeLastSupportPoint())
+				.append("Resitance", this.getLastResistancePoint()).toString();
 	}
 
 	private void print(String message) {
-		System.out.println("Message for: " + this.symbol + " " + message);
-		System.out.println("Trailling price = " + this.getSellTrailPrice() / tPercent);
-		System.out.println("Trend: " + this.getTrendDiretion() + " Support: " + this.toString());
-	}
-
-	public String getSymbol() {
-		return symbol;
+		System.out.println("\n\n ********* Message for: " + this.getSymbol() + " " + message + " *********");
+		System.out.println(this.toString());
 	}
 
 	public String getAssetA() {

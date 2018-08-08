@@ -1,6 +1,8 @@
 package com.binance.api.examples;
 
-import java.util.List;
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -8,6 +10,8 @@ import com.binance.api.client.BinanceApiWebSocketClient;
 import com.binance.api.client.domain.market.Candlestick;
 import com.binance.api.client.domain.market.CandlestickInterval;
 import com.binance.api.connect.AccountInfo;
+
+import reports.Report;
 
 /**
  * Illustrates how to use the klines/candlesticks event stream to create a local
@@ -22,11 +26,15 @@ public abstract class CandleSticksCache {
 	 * date.
 	 */
 	private Map<Long, Candlestick> candlesticksCache;
+	private ArrayList<Candlestick> candleStickList = new ArrayList<Candlestick>();
 	private Candlestick lastCandle;
 	private double closePrice;
 	private double sellTrailPrice = 0;
+	private Closeable clientCloseable;
+	private String symbol;
 
 	public CandleSticksCache(String symbol, CandlestickInterval interval) {
+		this.symbol = symbol;
 		initializeCandlestickCache(symbol, interval);
 		startCandlestickEventStreaming(symbol, interval);
 	}
@@ -35,11 +43,11 @@ public abstract class CandleSticksCache {
 	 * Initializes the candlestick cache by using the REST API.
 	 */
 	private void initializeCandlestickCache(String symbol, CandlestickInterval interval) {
-		List<Candlestick> candlestickBars = AccountInfo.getRestClient().getCandlestickBars(symbol.toUpperCase(),
-				interval);
+		candleStickList = new ArrayList<Candlestick>(
+				AccountInfo.getRestClient().getCandlestickBars(symbol.toUpperCase(), interval));
 
 		this.candlesticksCache = new TreeMap<>();
-		for (Candlestick candlestickBar : candlestickBars) {
+		for (Candlestick candlestickBar : candleStickList) {
 			candlesticksCache.put(candlestickBar.getOpenTime(), candlestickBar);
 			lastCandle = candlestickBar;
 			closePrice = Double.parseDouble(lastCandle.getClose());
@@ -52,7 +60,7 @@ public abstract class CandleSticksCache {
 	 */
 	private void startCandlestickEventStreaming(String symbol, CandlestickInterval interval) {
 
-		client.onCandlestickEvent(symbol.toLowerCase(), interval, response -> {
+		clientCloseable = client.onCandlestickEvent(symbol.toLowerCase(), interval, response -> {
 			Long openTime = response.getOpenTime();
 			Candlestick updateCandlestick = candlesticksCache.get(openTime);
 			if (updateCandlestick == null) {
@@ -73,14 +81,15 @@ public abstract class CandleSticksCache {
 			updateCandlestick.setTakerBuyBaseAssetVolume(response.getTakerBuyQuoteAssetVolume());
 
 			// Store the updated candlestick in the cache
+
 			candlesticksCache.put(openTime, updateCandlestick);
+			candleStickList = new ArrayList<Candlestick>(candlesticksCache.values());
 			lastCandle = updateCandlestick;
 			closePrice = Double.parseDouble(lastCandle.getClose());
 			if (closePrice > sellTrailPrice) {
 				sellTrailPrice = closePrice;
 			}
 			onCandleStickEvent();
-			System.out.println(updateCandlestick.toString());
 		});
 	}
 
@@ -107,8 +116,21 @@ public abstract class CandleSticksCache {
 	}
 
 	public void closeClient() {
-		client.close();
-		client = null;
+		try {
+			clientCloseable.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+			Report.createReport("Failed to close socket for: " + symbol);
+			Report.createReport("Error: " + e.getMessage());
+		}
+	}
+
+	public String getSymbol() {
+		return symbol;
+	}
+
+	public ArrayList<Candlestick> getCandleStickList() {
+		return candleStickList;
 	}
 
 }

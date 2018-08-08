@@ -54,31 +54,12 @@ public class BinanceApiWebSocketClientImpl implements BinanceApiWebSocketClient,
 
 	public Closeable onAllMarketTickersEvent(BinanceApiCallback<List<AllMarketTickersEvent>> callback) {
 		final String channel = "!ticker@arr";
-		return createNewWebSocket(channel,
-				new BinanceApiWebSocketCollectionListener<List<AllMarketTickersEvent>>(callback));
-	}
-
-	public Closeable onSingleMarketTickerEvent(String symbol, BinanceApiCallback<AllMarketTickersEvent> callback) {
-		final String channel = String.format("%s@ticker", symbol);
-		return createNewWebSocket(channel, new BinanceApiWebSocketListener<AllMarketTickersEvent>(callback));
+		return createNewWebSocket(channel, new BinanceApiWebSocketListener<List<AllMarketTickersEvent>>(callback));
 	}
 
 	@Override
 	public void close() {
 		client.dispatcher().executorService().shutdown();
-	}
-
-	private Closeable createNewWebSocket(String channel,
-			BinanceApiWebSocketCollectionListener<List<AllMarketTickersEvent>> listener) {
-		String streamingUrl = String.format("%s/%s", BinanceApiConstants.WS_API_BASE_URL, channel);
-		Request request = new Request.Builder().url(streamingUrl).build();
-		final WebSocket webSocket = client.newWebSocket(request, listener);
-		return () -> {
-			final int code = 1000;
-			listener.onClosing(webSocket, code, null);
-			webSocket.close(code, null);
-			listener.onClosed(webSocket, code, null);
-		};
 	}
 
 	private Closeable createNewWebSocket(String channel, BinanceApiWebSocketListener<?> listener) {

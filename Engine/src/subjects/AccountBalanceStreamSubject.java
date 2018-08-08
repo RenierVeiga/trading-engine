@@ -83,7 +83,6 @@ public class AccountBalanceStreamSubject {
 	}
 
 	public static void updateObservers() {
-		System.out.println("Account Balance Update.");
 		observer.update(accountBalanceCache);
 	}
 
