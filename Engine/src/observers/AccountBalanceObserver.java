@@ -7,6 +7,7 @@ import java.util.Map;
 import com.binance.api.client.domain.account.AssetBalance;
 import com.binance.api.client.domain.general.FilterType;
 import com.binance.api.client.domain.general.SymbolFilter;
+import com.binance.api.connect.AccountInfo;
 import com.binance.api.connect.BinanceInfo;
 
 import reports.Report;
@@ -38,7 +39,8 @@ public class AccountBalanceObserver {
 			AssetObserver observer = assetObserverMap.get(key);
 			AssetBalance assetbalance = assetBalanceMap.get(observer.getAssetA());
 			Double availableBalance = Double.parseDouble(assetbalance.getFree());
-			if (availableBalance < BinanceInfo.getMinQuantity(key)) {
+			Double price = Double.parseDouble(AccountInfo.getRestClient().getPrice(key).getPrice());
+			if (availableBalance * price < BinanceInfo.getMinQuantity(key)) {
 				// Unregister for updates.
 				Report.createReport("Unregistered: " + key);
 				observer.closeClient();
@@ -67,19 +69,20 @@ public class AccountBalanceObserver {
 	private void updateBalanceandRegister(AssetBalance assetBalance, String symbol, String assetA, String assetB) {
 		// If balance > then minimal allowed to trade then register pair.
 		Double minQuantity = BinanceInfo.getMinQuantity(symbol);
-		String balance = getBalance(symbol, assetBalance);
-		if (Double.parseDouble(balance) >= minQuantity) {
+		Double balance = Double.parseDouble(getBalance(symbol, assetBalance));
+		Double price = Double.parseDouble(AccountInfo.getRestClient().getPrice(symbol).getPrice());
+		if (balance * price >= minQuantity) {
 
 			// If we are already watching it then update the balance.
 			AssetObserver observer = assetObserverMap.get(symbol);
 			if (observer != null) {
 				Report.createReport("Balance Update for: " + symbol);
-				observer.update(balance);
+				observer.update(balance.toString());
 			}
 			// Otherwise add to watch list.
 			else {
 				Report.createReport("New Registration for: " + symbol);
-				assetObserverMap.put(symbol, new AssetObserver(assetA, assetB, balance));
+				assetObserverMap.put(symbol, new AssetObserver(assetA, assetB, balance.toString()));
 			}
 		}
 	}

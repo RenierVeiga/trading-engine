@@ -38,7 +38,8 @@ public class BinanceInfo {
 	}
 
 	public static Double getMinQuantity(String symbol) {
-		Double minQuantity = Double.parseDouble(symbolFilterMap.get(symbol).get(FilterType.LOT_SIZE).getMinQty());
+		Double minQuantity = Double
+				.parseDouble(symbolFilterMap.get(symbol).get(FilterType.MIN_NOTIONAL).getMinNotional());
 		return minQuantity;
 	}
 

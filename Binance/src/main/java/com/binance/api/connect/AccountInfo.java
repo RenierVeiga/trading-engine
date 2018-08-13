@@ -16,6 +16,7 @@ public class AccountInfo {
 	private static final BinanceApiAsyncRestClient restAsynClient = factory.newAsyncRestClient();
 	private static final BinanceApiRestClient restClient = factory.newRestClient();
 	private static final BinanceApiWebSocketClient socketClient = factory.newWebSocketClient();
+	private static String listenKey = AccountInfo.getRestClient().startUserDataStream();
 
 	public AccountInfo() {
 
@@ -31,6 +32,14 @@ public class AccountInfo {
 
 	public static BinanceApiWebSocketClient getSocketClient() {
 		return socketClient;
+	}
+
+	public static String getListenKey() {
+		return listenKey;
+	}
+
+	public static void setListenKey(String listenKey) {
+		AccountInfo.listenKey = listenKey;
 	}
 
 }

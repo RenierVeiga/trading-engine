@@ -1,5 +1,7 @@
 package subjects;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -10,6 +12,7 @@ import com.binance.api.client.domain.event.UserDataUpdateEvent.UserDataUpdateEve
 import com.binance.api.connect.AccountInfo;
 
 import observers.AccountBalanceObserver;
+import reports.Report;
 
 /**
  * @author Renier Veiga
@@ -26,16 +29,18 @@ public class AccountBalanceStreamSubject {
 	private static Map<String, AssetBalance> accountBalanceCache;
 	private static AccountBalanceObserver observer = AccountBalanceObserver.getInstance();
 	private static AccountBalanceStreamSubject instance = new AccountBalanceStreamSubject();
+	private static Closeable socketStream;
 
 	private AccountBalanceStreamSubject() {
-
 	}
 
-	public void start() {
-		System.out.println("Started Account Balance Stream.");
-		// Start balance streaming
-		String listenKey = initializeAssetBalanceCacheAndStreamSession();
-		startAccountBalanceEventStreaming(listenKey);
+	public static void initBalanceStream() {
+		// Resets the socket connection if previously started.
+		resetConnection();
+		// Clear and initialize cache.
+		initializeAssetBalanceCacheAndStreamSession();
+		// Start balance streaming.
+		startAccountBalanceEventStreaming();
 	}
 
 	/**
@@ -44,7 +49,7 @@ public class AccountBalanceStreamSubject {
 	 *
 	 * @return a listenKey that can be used with the user data streaming API.
 	 */
-	public static String initializeAssetBalanceCacheAndStreamSession() {
+	public static void initializeAssetBalanceCacheAndStreamSession() {
 
 		Account account = AccountInfo.getRestClient().getAccount();
 
@@ -56,15 +61,14 @@ public class AccountBalanceStreamSubject {
 			}
 		}
 		updateObservers();
-		return AccountInfo.getRestClient().startUserDataStream();
 	}
 
 	/**
 	 * Begins streaming of agg trades events.
 	 */
-	private void startAccountBalanceEventStreaming(String listenKey) {
+	private static void startAccountBalanceEventStreaming() {
 		BinanceApiWebSocketClient client = AccountInfo.getSocketClient();
-		client.onUserDataUpdateEvent(listenKey, response -> {
+		socketStream = client.onUserDataUpdateEvent(AccountInfo.getListenKey(), response -> {
 			if (response.getEventType() == UserDataUpdateEventType.ACCOUNT_UPDATE) {
 				// Override cached asset balances
 				for (AssetBalance assetBalance : response.getAccountUpdateEvent().getBalances()) {
@@ -88,5 +92,17 @@ public class AccountBalanceStreamSubject {
 
 	public static AccountBalanceStreamSubject getInstance() {
 		return instance;
+	}
+
+	public static void resetConnection() {
+		try {
+			if (socketStream != null) {
+				// Stops listening to the socket stream.
+				socketStream.close();
+			}
+		} catch (IOException e) {
+			Report.createReport("Failed to close balance socket stream. " + e.getMessage());
+			e.printStackTrace();
+		}
 	}
 }

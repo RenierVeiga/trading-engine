@@ -27,9 +27,10 @@ import reports.Report;
 
 public class AssetObserver extends TASignals {
 
-	private final double tPercent = 1.05; // Trailing Percentage
+	private final double tPercent = 1.03; // Trailing Percentage
 	private String assetA;
 	private String quantity;
+	private boolean ignoreTrend = true;
 
 	public AssetObserver(String assetA, String assetB, String quantity) {
 		super(String.format("%s%s", assetA, assetB).toUpperCase(), CandlestickInterval.HOURLY);
@@ -54,7 +55,7 @@ public class AssetObserver extends TASignals {
 	private void checkTrailingStopSell() {
 		// Market sell when the market price goes below the last support point or below
 		// the trailing price (5% below the max reached value).
-		if (this.getSellSignal() || (this.getClosePrice() < (this.getSellTrailPrice() / tPercent))) {
+		if ((!ignoreTrend && this.getSellSignal()) || (this.getClosePrice() < (this.getSellTrailPrice() / tPercent))) {
 			placeMarketSell();
 		}
 		print("Check Trailing stop ");
@@ -67,7 +68,7 @@ public class AssetObserver extends TASignals {
 				.append("TMaxPrice", (this.getSellTrailPrice() / tPercent))
 				.append("TrendDirection", this.getTrendDiretion()).append("Last Support", this.getLastSupportPoint())
 				.append("Before Last Support", this.getBeforeLastSupportPoint())
-				.append("Resitance", this.getLastResistancePoint()).toString();
+				.append("Resitance", this.getLastResistancePoint()).append("Quantity", this.quantity).toString();
 	}
 
 	private void print(String message) {

@@ -1,8 +1,9 @@
-import subjects.AccountBalanceStreamSubject;
+import connection.ConnectionManager;
 
 public class MainClass {
 
 	public static void main(String[] args) throws InterruptedException {
-		AccountBalanceStreamSubject.getInstance().start();
+
+		ConnectionManager.init();
 	}
 }
