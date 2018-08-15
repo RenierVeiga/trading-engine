@@ -8,8 +8,6 @@ import com.binance.api.client.BinanceApiAsyncRestClient;
 import com.binance.api.client.constant.BinanceApiConstants;
 import com.binance.api.connect.AccountInfo;
 
-import reports.Report;
-
 public class HeartBeatThread extends Thread {
 	private BinanceApiAsyncRestClient restAsyncClient = AccountInfo.getRestAsyncClient();
 
@@ -28,7 +26,6 @@ public class HeartBeatThread extends Thread {
 			// Thread.sleep(300000);
 			// Send heart beat.
 			restAsyncClient.keepAliveUserDataStream(AccountInfo.getListenKey(), response -> {
-				Report.createReport("Heart beat success. " + this.toString());
 			});
 			// Do it all over again.
 			keepAliveHeartBeat();

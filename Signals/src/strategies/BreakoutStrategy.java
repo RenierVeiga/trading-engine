@@ -1,4 +1,4 @@
-package Entities;
+package strategies;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -12,6 +12,7 @@ import com.binance.api.client.domain.market.Candlestick;
 import com.binance.api.client.domain.market.CandlestickInterval;
 import com.binance.api.examples.CandleSticksCache;
 
+import Entities.ShortCandle;
 import Utils.Enums.TrendDirection;
 
 /**
@@ -61,11 +62,11 @@ public abstract class BreakoutStrategy extends CandleSticksCache {
 				// Add to list only after the second iteration to ensure a minimum spacing
 				// between critical points.
 				if (pMin != null) {
-					candleStickMinMap.put(pMin.key, new ShortCandle(pMin));
+					candleStickMinMap.put(pMin.getKey(), new ShortCandle(pMin));
 				}
 
 				if (pMax != null) {
-					candleStickMaxMap.put(pMax.key, new ShortCandle(pMax));
+					candleStickMaxMap.put(pMax.getKey(), new ShortCandle(pMax));
 				}
 				pMin = null;
 				pMax = null;

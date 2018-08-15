@@ -10,6 +10,7 @@ import com.binance.api.client.domain.market.CandlestickInterval;
 import com.binance.api.connect.AccountInfo;
 
 import Entities.TASignals;
+import properties.Properties;
 import reports.Report;
 
 /**
@@ -27,7 +28,7 @@ import reports.Report;
 
 public class AssetObserver extends TASignals {
 
-	private final double tPercent = 1.03; // Trailing Percentage
+	private final double tPercent = Properties.getInstance().getTrailingPercent();
 	private String assetA;
 	private String quantity;
 	private boolean ignoreTrend = true;

@@ -5,9 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class Properties {
-	private static String key;
-
-	private static String secret;
+	private static String key, secret;
+	private static Double trailingPercent;
 
 	/*
 	 * This value indicates if we are running on auto stop sell mode, or fully
@@ -30,6 +29,7 @@ public class Properties {
 			// secret = value from txt file.
 			secret = p.getProperty("secret");
 			// sellOnlyMode = value from txt file.
+			trailingPercent = Double.parseDouble(p.getProperty("trailingPercent"));
 			if (p.getProperty("sellOnlyMode").equals("false")) {
 				sellOnlyMode = false;
 			} else {
@@ -56,5 +56,9 @@ public class Properties {
 
 	public void setProperty(String key, String value) {
 		p.setProperty(key, value);
+	}
+
+	public Double getTrailingPercent() {
+		return trailingPercent;
 	}
 }
