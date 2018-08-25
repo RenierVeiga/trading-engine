@@ -76,7 +76,6 @@ public class AccountBalanceObserver {
 			// If we are already watching it then update the balance.
 			AssetObserver observer = assetObserverMap.get(symbol);
 			if (observer != null) {
-				Report.createReport("Balance Update for: " + symbol);
 				observer.update(balance.toString());
 			}
 			// Otherwise add to watch list.
