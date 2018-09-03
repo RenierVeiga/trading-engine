@@ -1,11 +1,10 @@
-package com.binance.api.examples;
+package Entities;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -29,8 +28,6 @@ public abstract class CandleSticksCache {
      * date.
      */
     private SortedMap<Long, Candlestick> candlesticksCache;
-    private List<Candlestick> candleStickList;
-    private double closePrice;
     protected Closeable clientCloseable;
     private String symbol;
 
@@ -44,14 +41,13 @@ public abstract class CandleSticksCache {
      * Initializes the candlestick cache by using the REST API.
      */
     private void initializeCandlestickCache(String symbol, CandlestickInterval interval) {
-	candleStickList = Collections.synchronizedList(new ArrayList<Candlestick>(
-		AccountInfo.getRestClient().getCandlestickBars(symbol.toUpperCase(), interval)));
+	List<Candlestick> candleStickList = new ArrayList<Candlestick>(
+		AccountInfo.getRestClient().getCandlestickBars(symbol.toUpperCase(), interval));
 
 	this.candlesticksCache = Collections.synchronizedSortedMap(new TreeMap<>());
 	for (Candlestick candlestickBar : candleStickList) {
 	    candlesticksCache.put(candlestickBar.getOpenTime(), candlestickBar);
 	}
-	closePrice = Double.parseDouble(getLastCandle().getClose());
     }
 
     /**
@@ -60,8 +56,7 @@ public abstract class CandleSticksCache {
     private void startCandlestickEventStreaming(String symbol, CandlestickInterval interval) {
 
 	clientCloseable = client.onCandlestickEvent(symbol.toLowerCase(), interval, response -> {
-	    Long openTime = response.getOpenTime();
-	    Candlestick updateCandlestick = candlesticksCache.get(openTime);
+	    Candlestick updateCandlestick = candlesticksCache.get(response.getOpenTime());
 	    if (updateCandlestick == null) {
 		// new candlestick
 		updateCandlestick = new Candlestick();
@@ -80,27 +75,12 @@ public abstract class CandleSticksCache {
 	    updateCandlestick.setTakerBuyBaseAssetVolume(response.getTakerBuyQuoteAssetVolume());
 
 	    // Store the updated candlestick in the cache
-
-	    candlesticksCache.put(openTime, updateCandlestick);
-	    candleStickList = new ArrayList<Candlestick>(candlesticksCache.values());
-	    closePrice = Double.parseDouble(response.getClose());
+	    candlesticksCache.put(updateCandlestick.getOpenTime(), updateCandlestick);
 	    onCandleStickEvent();
 	});
     }
 
     protected abstract void onCandleStickEvent();
-
-    /**
-     * @return a klines/candlestick cache, containing the open/start time of the
-     *         candlestick as the key, and the candlestick data as the value.
-     */
-    public Map<Long, Candlestick> getCandlesticksCache() {
-	return candlesticksCache;
-    }
-
-    public double getClosePrice() {
-	return closePrice;
-    }
 
     public void closeClient() {
 	try {
@@ -116,24 +96,8 @@ public abstract class CandleSticksCache {
 	return symbol;
     }
 
-    public List<Candlestick> getCandleStickList() {
-	return candleStickList;
-    }
-
-    public Candlestick getLastCandle() {
-	if (candleStickList.size() > 0) {
-	    return candleStickList.get(candleStickList.size() - 1);
-	} else {
-	    return null;
-	}
-    }
-
-    public Candlestick getPriorCandle() {
-	if (candleStickList.size() > 1) {
-	    return candleStickList.get(candleStickList.size() - 2);
-	} else {
-	    return null;
-	}
+    public synchronized SortedMap<Long, Candlestick> getCandlesticksCache() {
+	return candlesticksCache;
     }
 
 }

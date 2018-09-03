@@ -1,5 +1,6 @@
 package observers;
 
+import java.io.IOException;
 import java.util.Date;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -8,9 +9,9 @@ import com.binance.api.client.constant.BinanceApiConstants;
 import com.binance.api.client.domain.account.NewOrder;
 import com.binance.api.client.domain.market.CandlestickInterval;
 import com.binance.api.connect.AccountInfo;
+import com.binance.api.examples.CandleSticksStream;
 
-import Entities.TASignals;
-import properties.Properties;
+import factory.StrategyFactory;
 import reports.Report;
 
 /**
@@ -26,18 +27,18 @@ import reports.Report;
  * 
  */
 
-public class AssetObserver extends TASignals {
+public class AssetObserver extends CandleSticksStream {
 
-    private final double tPercent = Properties.getInstance().getTrailingPercent();
     private String assetA;
     private String quantity;
-    private boolean ignoreTrend = true;
-    private boolean ignoretPrice = false;
+
+    private StrategyFactory strategies;
 
     public AssetObserver(String assetA, String assetB, String quantity) {
 	super(String.format("%s%s", assetA, assetB).toUpperCase(), CandlestickInterval.HOURLY);
 	this.assetA = assetA;
 	this.quantity = quantity;
+	strategies = new StrategyFactory(this.getSymbol(), CandlestickInterval.HOURLY);
 	Report.createReport("Started Asset Observer for pair: " + this.getSymbol());
     }
 
@@ -50,28 +51,23 @@ public class AssetObserver extends TASignals {
     private void placeMarketSell() {
 	print("Attempt Market Sell");
 	AccountInfo.getRestAsyncClient().newOrder(NewOrder.marketSell(this.getSymbol(), quantity), response -> {
+	    print("Sell Order Success");
 	    Report.createReport("Sell Order Success: \n" + this.toString());
+	    Report.createReport(strategies.toString());
 	});
     }
 
     private void checkTrailingStopSell() {
-	// Market sell when the market price goes below the last support point or below
-	// the trailing price (5% below the max reached value).
-	if ((!ignoreTrend && this.getSellSignal())
-		|| (!ignoretPrice && (this.getClosePrice() < (this.getSellTrailPrice() / tPercent)))) {
+	print("Check Trailing stop ");
+	if (strategies.getSellSignal()) {
 	    placeMarketSell();
 	}
-	print("Check Trailing stop ");
     }
 
     public String toString() {
 	return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
 		.append("\nSymbol", this.getSymbol()).append("Date", new Date().toString())
-		.append("\nCurrentPrice", this.getClosePrice())
-		.append("TMaxPrice", (this.getSellTrailPrice() / tPercent))
-		.append("TrendDirection", this.getTrendDiretion()).append("Last Support", this.getLastSupportPoint())
-		.append("Before Last Support", this.getBeforeLastSupportPoint())
-		.append("Resitance", this.getLastResistancePoint()).append("Quantity", this.quantity).toString();
+		.append("Quantity", this.quantity).toString();
     }
 
     private void print(String message) {
@@ -85,8 +81,27 @@ public class AssetObserver extends TASignals {
 
     @Override
     public void onCandleStickEvent() {
-	// TODO Auto-generated method stub
-	this.loadSupResPoints();
 	checkTrailingStopSell();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see com.binance.api.examples.CandleSticksCache#closeClient()
+     * 
+     * Closes this connection as well as connections instantiated by strategies.
+     * 
+     */
+    @Override
+    public void closeClient() {
+	try {
+	    this.clientCloseable.close();
+	    strategies.closeClient();
+	} catch (IOException e) {
+	    e.printStackTrace();
+	    Report.createReport("Failed to close socket for: " + this.getSymbol());
+	    Report.createReport("Error: " + e.getMessage());
+	}
+
     }
 }

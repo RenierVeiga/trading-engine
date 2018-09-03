@@ -12,5 +12,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="src" path="/Binance"/>
+	<classpathentry kind="src" path="/AccountProperties"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
