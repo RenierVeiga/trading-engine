@@ -45,7 +45,7 @@ public class AssetObserver extends CandleSticksStream {
     public void update(String quantity) {
 	this.quantity = quantity;
 	print("Update Balance Event");
-	checkTrailingStopSell();
+	checkPlaceSell();
     }
 
     private void placeMarketSell() {
@@ -57,8 +57,8 @@ public class AssetObserver extends CandleSticksStream {
 	});
     }
 
-    private void checkTrailingStopSell() {
-	print("Check Trailing stop ");
+    private void checkPlaceSell() {
+	print("Check Place Sell ");
 	if (strategies.getSellSignal()) {
 	    placeMarketSell();
 	}
@@ -81,7 +81,7 @@ public class AssetObserver extends CandleSticksStream {
 
     @Override
     public void onCandleStickEvent() {
-	checkTrailingStopSell();
+	checkPlaceSell();
     }
 
     /*

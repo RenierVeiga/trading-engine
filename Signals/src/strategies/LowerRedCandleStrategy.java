@@ -61,6 +61,6 @@ public class LowerRedCandleStrategy extends Strategy {
     }
 
     @Override
-    public void update() {
+    protected void update() {
     }
 }

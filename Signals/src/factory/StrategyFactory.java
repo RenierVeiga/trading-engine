@@ -44,7 +44,7 @@ public class StrategyFactory extends CandleSticksCache {
     @Override
     protected void onCandleStickEvent() {
 	for (Strategy item : strategiesMap.values()) {
-	    item.update(this.getCandlesticksCache());
+	    item.updateCache(this.getCandlesticksCache());
 	}
     }
 

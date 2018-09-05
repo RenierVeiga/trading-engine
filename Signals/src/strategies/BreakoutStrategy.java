@@ -32,7 +32,7 @@ public class BreakoutStrategy extends Strategy {
     private final int nCandlesToCompare = 24;
 
     // This method loads the support and resistance points for a given pair.
-    protected void loadSupResPoints() {
+    private void loadSupResPoints() {
 	// Reset list to free memory.
 	candleStickMaxMap = new LinkedHashMap<Long, ShortCandle>();
 	candleStickMinMap = new LinkedHashMap<Long, ShortCandle>();
@@ -207,7 +207,7 @@ public class BreakoutStrategy extends Strategy {
     }
 
     @Override
-    public void update() {
+    protected void update() {
 	loadSupResPoints();
     }
 

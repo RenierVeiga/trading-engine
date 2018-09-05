@@ -16,13 +16,13 @@ public abstract class Strategy {
     protected SortedMap<Long, Candlestick> candlesticksCache;
     protected List<Candlestick> candleStickList;
 
-    public void update(SortedMap<Long, Candlestick> candlesticksCache) {
+    public void updateCache(SortedMap<Long, Candlestick> candlesticksCache) {
 	this.candlesticksCache = candlesticksCache;
 	candleStickList = new ArrayList<Candlestick>(this.getCandlesticksCache().values());
 	update();
     }
 
-    public abstract void update();
+    protected abstract void update();
 
     public abstract boolean getSellSignal();
 
